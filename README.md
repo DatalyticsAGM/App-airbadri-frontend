@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Airbnb Promotional Landing Page
 
 Landing page minimalista inspirada en Airbnb, diseñada para promocionar propiedades y experiencias únicas.
@@ -156,3 +157,7 @@ Esta landing page está diseñada para:
 **Desarrollado para**: Promociones de Airbnb
 **Tipo**: Landing Page
 **Estado**: Listo para producción (requiere conexión a base de datos)
+=======
+# App-airbadri-frontend
+Aplicación de reservas vacacionales utilizando next.js y tailwindcss.
+>>>>>>> 773653bb1b3fa9ff9c9c58f0e70fa23d00b0892a
