@@ -228,3 +228,5 @@ Las únicas tareas pendientes son:
 
 **Estado general del proyecto**: ✅ LISTO PARA USO Y PRUEBAS
 
+
+

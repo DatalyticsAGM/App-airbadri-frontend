@@ -514,3 +514,5 @@ Todos los endpoints pueden retornar errores con el siguiente formato:
 
 **Nota**: Esta documentación describe los endpoints esperados. La implementación real puede variar según el backend específico.
 
+
+
