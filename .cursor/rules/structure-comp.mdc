@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+asegurate de entregar solo los primeros 5 pasos a seguir cuando se solicitud una refactorizacion o un to-do list de pasos
+Nunca ejecutar comando npm run dev o npm run build

@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { EditPropertyForm } from '@/components/properties/edit-property-form';
+import { EditPropertyForm } from '@/components/properties';
 import { mockProperties } from '@/lib/properties/mock-properties';
 import { useAuth } from '@/lib/auth/auth-context';
 import type { Property } from '@/lib/properties/types';

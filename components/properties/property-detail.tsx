@@ -6,8 +6,22 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Star, MapPin, Users, Bed, Bath, Wifi, Car, Waves, Home } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { ReviewList } from '@/components/reviews/review-list';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ReviewForm } from '@/components/reviews/review-form';
+import { ShareButton } from './share-button';
+import { useAuth } from '@/lib/auth/auth-context';
+import { mockReviews } from '@/lib/reviews/mock-reviews';
 import type { Property } from '@/lib/properties/types';
 
 interface PropertyDetailProps {
@@ -22,6 +36,30 @@ const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export function PropertyDetail({ property }: PropertyDetailProps) {
+  const { user, isAuthenticated } = useAuth();
+  const [ratingData, setRatingData] = useState({ average: property.rating, count: property.reviewCount });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    loadRatingData();
+  }, [property.id, refreshKey]);
+
+  const loadRatingData = async () => {
+    try {
+      const data = await mockReviews.calculateAverageRating(property.id);
+      setRatingData(data);
+    } catch (error) {
+      console.error('Error loading rating data:', error);
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    setShowReviewForm(false);
+    setRefreshKey(prev => prev + 1);
+    loadRatingData();
+  };
+
   return (
     <div className="space-y-8">
       {/* Image Gallery */}
@@ -51,24 +89,30 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
 
       {/* Title and Location */}
       <div>
-        <h1 className="text-3xl font-bold text-airbnb-text-100 mb-3">
-          {property.title}
-        </h1>
+        <div className="flex items-start justify-between mb-3">
+          <h1 className="text-3xl font-bold text-airbnb-text-100 flex-1">
+            {property.title}
+          </h1>
+          <ShareButton property={property} />
+        </div>
         <div className="flex items-center gap-2 text-airbnb-text-200 mb-4">
           <MapPin className="w-5 h-5" />
           <span>
             {property.location.address}, {property.location.city}, {property.location.country}
           </span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
             <span className="font-semibold text-airbnb-text-100">
-              {property.rating.toFixed(1)}
+              {ratingData.average > 0 ? ratingData.average.toFixed(1) : 'Nuevo'}
             </span>
             <span className="text-airbnb-text-200">
-              ({property.reviewCount} reseñas)
+              ({ratingData.count} {ratingData.count === 1 ? 'reseña' : 'reseñas'})
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareButton property={property} />
           </div>
         </div>
       </div>
@@ -155,6 +199,39 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
             <div className="text-sm text-airbnb-text-200">Anfitrión desde 2020</div>
           </div>
         </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-airbnb-bg-300"></div>
+
+      {/* Reviews Section */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-airbnb-text-100">
+            Reseñas
+          </h2>
+          {isAuthenticated && user && (
+            <Dialog open={showReviewForm} onOpenChange={setShowReviewForm}>
+              <DialogTrigger asChild>
+                <Button className="bg-airbnb-primary-100 hover:bg-airbnb-primary-100/90 text-white">
+                  Escribir una reseña
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Escribe una reseña</DialogTitle>
+                </DialogHeader>
+                <ReviewForm
+                  propertyId={property.id}
+                  userId={user.id}
+                  onSuccess={handleReviewSuccess}
+                  onCancel={() => setShowReviewForm(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+        <ReviewList propertyId={property.id} key={refreshKey} />
       </div>
     </div>
   );

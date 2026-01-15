@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { SignupForm } from '@/components/auth/signup-form';
+import { SignupForm } from '@/components/auth';
 import { Home } from 'lucide-react';
 
 export default function SignupPage() {

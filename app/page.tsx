@@ -14,11 +14,11 @@
  */
 
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 import { HeroSection } from '@/components/hero-section';
 import { FeaturesSection } from '@/components/features-section';
 import { PromotionsSection } from '@/components/promotions-section';
 import { CTASection } from '@/components/cta-section';
-import { Footer } from '@/components/footer';
 import { TopbarOffers } from '@/components/topbar-offers';
 
 export default function Home() {

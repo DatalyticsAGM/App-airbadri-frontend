@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { LoginForm } from '@/components/auth/login-form';
+import { LoginForm } from '@/components/auth';
 import { Home } from 'lucide-react';
 
 export default function LoginPage() {

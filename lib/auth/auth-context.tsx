@@ -31,6 +31,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   forgotPassword: (email: string) => Promise<ResetPasswordResponse>;
   resetPassword: (token: string, newPassword: string) => Promise<ResetPasswordResponse>;
+  refreshUser: () => Promise<void>;
 }
 
 // Crear el contexto
@@ -137,6 +138,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Refresca los datos del usuario actual
+   */
+  const refreshUser = async () => {
+    try {
+      const currentUser = await mockAuth.getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error('Error refrescando usuario:', error);
+    }
+  };
+
   // Valor del contexto
   const value: AuthContextType = {
     user,
@@ -147,6 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     forgotPassword,
     resetPassword,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

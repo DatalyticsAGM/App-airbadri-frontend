@@ -16,6 +16,8 @@ import { mockProperties } from '@/lib/properties/mock-properties';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Calendar, Settings } from 'lucide-react';
+import { AvatarUpload } from '@/components/profile/avatar-upload';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -95,13 +97,9 @@ export default function ProfilePage() {
               <CardTitle>Información Personal</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-airbnb-primary-300 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-airbnb-primary-100">
-                    {user.fullName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <AvatarUpload />
+                <div className="flex-1">
                   <h2 className="text-2xl font-bold text-airbnb-text-100 mb-1">
                     {user.fullName}
                   </h2>

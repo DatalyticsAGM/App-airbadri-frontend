@@ -7,11 +7,17 @@
  * Actualizado: Integrado con AuthButton para mostrar estado de autenticación
  */
 
-import { Home } from 'lucide-react';
+'use client';
+
+import { Home, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { AuthButton } from '@/components/auth/auth-button';
+import { AuthButton } from '@/components/auth';
+import { NotificationBell } from '@/components/notifications/notification-bell';
+import { useAuth } from '@/lib/auth/auth-context';
 
 export function Header() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <header className="bg-airbnb-bg-100 border-b border-airbnb-bg-300/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,10 +48,20 @@ export function Header() {
             >
               Help
             </Link>
+            {isAuthenticated && (
+              <Link
+                href="/favorites"
+                className="text-airbnb-text-200 hover:text-airbnb-primary-100 transition-colors font-medium flex items-center gap-1"
+              >
+                <Heart className="w-4 h-4" />
+                Favoritos
+              </Link>
+            )}
           </nav>
 
-          {/* Auth Button - Muestra estado de autenticación */}
-          <div className="flex items-center">
+          {/* Notifications and Auth Button */}
+          <div className="flex items-center gap-2">
+            {isAuthenticated && <NotificationBell />}
             <AuthButton />
           </div>
 

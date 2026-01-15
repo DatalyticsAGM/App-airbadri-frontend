@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, LogOut, Settings, Home, Calendar } from 'lucide-react';
+import { User, LogOut, Settings, Home, Calendar, Heart, LayoutDashboard } from 'lucide-react';
 
 export function AuthButton() {
   const { user, logout, isAuthenticated, loading } = useAuth();
@@ -72,7 +72,7 @@ export function AuthButton() {
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 p-2 rounded-full hover:bg-airbnb-bg-200 transition-colors">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="" alt={user.fullName} />
+              <AvatarImage src={user.avatar} alt={user.fullName} />
               <AvatarFallback className="bg-airbnb-primary-100 text-white text-xs">
                 {initials}
               </AvatarFallback>
@@ -100,9 +100,21 @@ export function AuthButton() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link href="/host/dashboard" className="flex items-center cursor-pointer">
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/properties/my-properties" className="flex items-center cursor-pointer">
               <Home className="mr-2 h-4 w-4" />
               Mis Propiedades
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/favorites" className="flex items-center cursor-pointer">
+              <Heart className="mr-2 h-4 w-4" />
+              Mis Favoritos
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

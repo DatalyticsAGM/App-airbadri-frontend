@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { CreatePropertyForm } from '@/components/properties/create-property-form';
+import { CreatePropertyForm } from '@/components/properties';
 import { useAuth } from '@/lib/auth/auth-context';
 
 export default function CreatePropertyPage() {

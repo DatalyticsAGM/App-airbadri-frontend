@@ -41,6 +41,12 @@ export interface PropertyFilters {
   bedrooms?: number;
   bathrooms?: number;
   maxGuests?: number;
+  propertyType?: string;
+  minRating?: number;
+  searchText?: string;
+  checkIn?: Date;
+  checkOut?: Date;
+  guests?: number;
 }
 
 export interface CreatePropertyData {

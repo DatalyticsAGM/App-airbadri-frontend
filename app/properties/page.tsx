@@ -9,8 +9,8 @@
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { PropertyGrid } from '@/components/properties/property-grid';
-import { PropertyFiltersComponent } from '@/components/properties/property-filters';
+import { PropertyGrid, PropertyFiltersComponent } from '@/components/properties';
+import { AdvancedSearch } from '@/components/search';
 import { mockProperties } from '@/lib/properties/mock-properties';
 import { initializeMockProperties } from '@/lib/properties/mock-data';
 import type { Property, PropertyFilters } from '@/lib/properties/types';
@@ -75,10 +75,25 @@ export default function PropertiesPage() {
             </p>
           </div>
 
+          {/* Advanced Search - Mobile/Tablet */}
+          <div className="lg:hidden mb-6">
+            <AdvancedSearch
+              onSearch={setFilters}
+              initialFilters={filters}
+            />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar con filtros */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-8">
+              <div className="sticky top-8 space-y-6">
+                {/* Advanced Search - Desktop */}
+                <div className="hidden lg:block">
+                  <AdvancedSearch
+                    onSearch={setFilters}
+                    initialFilters={filters}
+                  />
+                </div>
                 <PropertyFiltersComponent
                   filters={filters}
                   onFiltersChange={setFilters}

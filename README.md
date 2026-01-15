@@ -1,7 +1,6 @@
-<<<<<<< HEAD
-# Airbnb Promotional Landing Page
+# App-airbadri-frontend
 
-Landing page minimalista inspirada en Airbnb, diseñada para promocionar propiedades y experiencias únicas.
+Aplicación de reservas vacacionales utilizando Next.js y Tailwind CSS, inspirada en Airbnb.
 
 ## 🎨 Características de Diseño
 
@@ -9,7 +8,6 @@ Landing page minimalista inspirada en Airbnb, diseñada para promocionar propied
 - **Colores Pasteles**: Paleta de colores oficial de Airbnb
 - **Responsive**: Diseño adaptable a todos los dispositivos
 - **Fuente**: DM Sans de Google Fonts
-- **Sin Buscadores**: Enfocado solo en promoción y conversión
 
 ## 🎨 Paleta de Colores
 
@@ -31,73 +29,111 @@ Landing page minimalista inspirada en Airbnb, diseñada para promocionar propied
 ```
 project/
 ├── app/
-│   ├── layout.tsx       # Layout principal con DM Sans
-│   ├── page.tsx         # Página principal (Home)
-│   └── globals.css      # Estilos globales
+│   ├── layout.tsx              # Layout principal con DM Sans
+│   ├── page.tsx                # Página principal (Home)
+│   ├── globals.css             # Estilos globales
+│   ├── auth/                   # Páginas de autenticación
+│   │   ├── login/
+│   │   ├── signup/
+│   │   ├── forgot-password/
+│   │   └── reset-password/
+│   ├── properties/             # Páginas de propiedades
+│   │   ├── [id]/
+│   │   ├── create/
+│   │   └── my-properties/
+│   ├── bookings/               # Páginas de reservas
+│   │   └── [id]/
+│   ├── profile/                # Página de perfil
+│   └── about/                  # Página acerca de
 ├── components/
-│   ├── header.tsx              # Navegación superior
-│   ├── hero-section.tsx        # Sección hero principal
-│   ├── features-section.tsx    # Características del servicio
-│   ├── promotions-section.tsx  # Tarjetas de promociones
-│   ├── cta-section.tsx         # Call-to-action final
-│   └── footer.tsx              # Footer con enlaces
-└── components/ui/              # Componentes de shadcn/ui
+│   ├── index.ts                # Barrel export principal
+│   ├── auth/                   # Componentes de autenticación
+│   │   ├── index.ts            # Barrel export
+│   │   ├── auth-button.tsx
+│   │   ├── login-form.tsx
+│   │   ├── signup-form.tsx
+│   │   ├── forgot-password-form.tsx
+│   │   └── reset-password-form.tsx
+│   ├── properties/             # Componentes de propiedades
+│   │   ├── index.ts            # Barrel export
+│   │   ├── property-card.tsx
+│   │   ├── property-grid.tsx
+│   │   ├── property-filters.tsx
+│   │   ├── property-detail.tsx
+│   │   ├── create-property-form.tsx
+│   │   └── edit-property-form.tsx
+│   ├── bookings/               # Componentes de reservas
+│   │   ├── index.ts            # Barrel export
+│   │   └── booking-form.tsx
+│   ├── shared/                 # Componentes compartidos (landing)
+│   │   ├── index.ts            # Barrel export
+│   │   ├── header.tsx
+│   │   ├── footer.tsx
+│   │   ├── hero-section.tsx
+│   │   ├── features-section.tsx
+│   │   ├── promotions-section.tsx
+│   │   ├── cta-section.tsx
+│   │   └── topbar-offers.tsx
+│   └── ui/                     # Componentes de shadcn/ui
+├── lib/
+│   ├── auth/                   # Servicios y contexto de autenticación
+│   │   ├── mock-auth.ts
+│   │   ├── auth-context.tsx
+│   │   └── mock-users-data.ts
+│   ├── properties/             # Servicios y tipos de propiedades
+│   │   ├── types.ts
+│   │   ├── mock-properties.ts
+│   │   └── mock-data.ts
+│   ├── bookings/               # Servicios y tipos de reservas
+│   │   ├── types.ts
+│   │   ├── mock-bookings.ts
+│   │   └── mock-data.ts
+│   └── utils.ts                # Utilidades compartidas
+└── hooks/                      # Custom hooks
+    └── use-toast.ts
 ```
 
-## 🧩 Componentes
+### Convenciones de Estructura
 
-### Header
-- Logo de Airbnb
-- Enlaces de navegación: Become a host, Help, Sign up, Log in
-- Responsive con menú hamburguesa para móvil
+- **Componentes por módulo**: Cada módulo funcional tiene su propia carpeta en `components/`
+- **Barrel exports**: Cada carpeta de componentes tiene un `index.ts` para facilitar imports
+- **Imports centralizados**: Usar `@/components` para imports de componentes compartidos
+- **Separación de concerns**: Servicios y lógica en `lib/`, componentes de UI en `components/`
 
-### Hero Section
-- Headline principal: "Book unique homes and experience"
-- Descripción del servicio
-- CTA: "Explore destinations"
-- Background con imagen de destino único
+## ✅ Estado del Proyecto
 
-### Features Section
-- 4 características principales con iconos
-- Diseño en grid responsive
-- Tarjetas con hover effect
+### Milestone 1: Módulo de Autenticación (Auth) - MOCK ✅
+- Sistema completo de autenticación con localStorage
+- Login, registro, recuperación y reset de contraseña
+- Integración con header y navegación
 
-### Promotions Section
-- 3 promociones destacadas
-- Tarjetas con imágenes de Pexels
-- Badges con descuentos
-- Botones de "Book now"
+### Milestone 2: Módulo de Propiedades y Reservas (MOCK) ✅
+- CRUD completo de propiedades
+- Sistema de reservas con validación de disponibilidad
+- Filtros y búsqueda de propiedades
+- Perfil de usuario con estadísticas
 
-### CTA Section
-- Llamada a la acción final
-- Dos botones: "Browse homes" y "Become a host"
-- Estadísticas de confianza (4M+ hosts, 220+ países, etc.)
+### Milestone 2.1: Refactorización de Estructura de Componentes ✅
+- Organización por módulos funcionales
+- Barrel exports para imports limpios
+- Estructura consistente y escalable
 
-### Footer
-- Enlaces organizados en 4 columnas
-- Redes sociales
-- Copyright y enlaces legales
+### Milestone 3: Mejoras de UX/UI, SEO y Features Adicionales ✅
+- Sistema de reviews y ratings
+- Búsqueda avanzada
+- Optimización SEO (metadata, sitemap, robots.txt)
+- Skeleton loaders
+- Sistema de notificaciones
+- Dashboard de host
+- Sistema de favoritos
+- Compartir propiedades
 
-## 🔍 Comentarios Importantes
-
-### TODO Comments (Tareas Pendientes)
-- `header.tsx:25` - Conectar enlaces con rutas reales
-- `hero-section.tsx:17` - Reemplazar con imagen real de destino
-- `hero-section.tsx:41` - Conectar con página de exploración
-- `hero-section.tsx:49` - Agregar enlace al programa de hosts
-- `features-section.tsx:45` - Considerar animaciones al hacer scroll
-- `promotions-section.tsx:57` - Integrar con base de datos
-- `cta-section.tsx:39` - Reemplazar con datos reales de DB
-- `footer.tsx:47` - Actualizar enlaces cuando las páginas estén creadas
-- `page.tsx:26` - Agregar smooth scroll entre secciones
-
-### FIXME Comments (Requieren Atención)
-- `header.tsx:44` - Implementar menú hamburguesa para mobile
-- `hero-section.tsx:36` - Conectar botón con sistema de propiedades
-- `promotions-section.tsx:81` - Conectar con sistema de reservas real
-- `cta-section.tsx:28` - Conectar botones con rutas correspondientes
-- `footer.tsx:79` - Agregar enlaces reales a redes sociales
-- `globals.css:97` - Verificar accesibilidad de animaciones
+### Milestone 4: Testing, Optimización y Preparación para Producción ✅
+- Configuración de testing (Jest, Testing Library)
+- Tests unitarios para servicios MOCK
+- Preparación para backend real (abstracciones e interfaces)
+- Variables de entorno y configuración
+- Documentación completa
 
 ## 🚀 Stack Tecnológico
 
@@ -123,41 +159,78 @@ npm run build
 
 # Iniciar producción
 npm start
+
+# Testing
+npm test              # Ejecutar tests
+npm run test:watch    # Tests en modo watch
+npm run test:coverage # Tests con cobertura
+
+# Type checking
+npm run typecheck     # Verificar tipos TypeScript
+
+# Linting
+npm run lint          # Ejecutar ESLint
 ```
 
-## 🔗 Próximos Pasos
+## 🔧 Configuración
 
-1. **Conectar con Base de Datos**: Integrar Supabase para cargar promociones dinámicamente
-2. **Sistema de Autenticación**: Implementar login y registro de usuarios
-3. **Página de Propiedades**: Crear catálogo de propiedades disponibles
-4. **Sistema de Reservas**: Desarrollar flujo completo de reservación
-5. **Panel de Host**: Área para que los hosts gestionen sus propiedades
-6. **Optimización SEO**: Metatags, Open Graph, sitemap
-7. **Analytics**: Implementar seguimiento de conversiones
+### Variables de Entorno
+
+Copia `.env.example` a `.env.local` y configura las variables necesarias:
+
+```bash
+cp .env.example .env.local
+```
+
+Variables principales:
+- `NEXT_PUBLIC_API_URL`: URL del backend (opcional, por defecto usa MOCK)
+- `NEXT_PUBLIC_USE_MOCK_SERVICES`: `true` para usar servicios MOCK (por defecto)
+- `NEXT_PUBLIC_APP_NAME`: Nombre de la aplicación
+- `NEXT_PUBLIC_APP_URL`: URL pública de la aplicación
+
+Ver `.env.example` para todas las opciones disponibles.
+
+## 📚 Documentación
+
+- [Arquitectura](./docs/ARCHITECTURE.md) - Estructura y decisiones de diseño
+- [API](./docs/API.md) - Documentación de API esperada
+- [Desarrollo](./docs/DEVELOPMENT.md) - Guía para desarrolladores
+
+## 🧪 Testing
+
+El proyecto incluye tests unitarios usando Jest y React Testing Library:
+
+```bash
+npm test              # Ejecutar todos los tests
+npm run test:watch    # Modo watch
+npm run test:coverage # Con cobertura
+```
+
+Los tests cubren:
+- Servicios MOCK (auth, properties, bookings)
+- Utilidades
+- Componentes (en desarrollo)
+
+## 🔄 Migración a Backend Real
+
+El proyecto está preparado para migrar fácilmente de servicios MOCK a API real:
+
+1. Configura `NEXT_PUBLIC_API_URL` en `.env.local`
+2. Establece `NEXT_PUBLIC_USE_MOCK_SERVICES=false`
+3. Implementa los servicios en `lib/api/services/` según las interfaces definidas
+
+Ver [docs/API.md](./docs/API.md) para la documentación de endpoints esperados.
 
 ## 📝 Notas Adicionales
 
-- **Sin buscadores**: Por especificación, no se incluye funcionalidad de búsqueda
+- **Sistema MOCK**: Actualmente usa localStorage para almacenamiento (solo desarrollo)
 - **Imágenes**: Todas las imágenes son de Pexels (uso permitido)
 - **Responsive**: Diseño optimizado para mobile, tablet y desktop
 - **Accesibilidad**: Se respetan las preferencias de movimiento reducido
 - **Performance**: Build optimizado con Next.js
-- **Convenciones**: Se usan nombres comunes en español e inglés según contexto
-
-## 🎯 Enfoque
-
-Esta landing page está diseñada para:
-- Captar la atención del visitante
-- Mostrar las promociones actuales
-- Generar confianza con estadísticas y reviews
-- Convertir visitantes en usuarios registrados o hosts
 
 ---
 
-**Desarrollado para**: Promociones de Airbnb
-**Tipo**: Landing Page
-**Estado**: Listo para producción (requiere conexión a base de datos)
-=======
-# App-airbadri-frontend
-Aplicación de reservas vacacionales utilizando next.js y tailwindcss.
->>>>>>> 773653bb1b3fa9ff9c9c58f0e70fa23d00b0892a
+**Desarrollado para**: App-airbadri-frontend
+**Tipo**: Aplicación de Reservas Vacacionales
+**Estado**: En desarrollo activo

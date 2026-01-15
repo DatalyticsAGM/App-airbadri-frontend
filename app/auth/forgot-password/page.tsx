@@ -7,7 +7,7 @@
  */
 
 import Link from 'next/link';
-import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
+import { ForgotPasswordForm } from '@/components/auth';
 import { Home } from 'lucide-react';
 
 export default function ForgotPasswordPage() {

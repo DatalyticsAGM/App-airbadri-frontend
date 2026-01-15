@@ -8,7 +8,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ResetPasswordForm } from '@/components/auth/reset-password-form';
+import { ResetPasswordForm } from '@/components/auth';
 import { Home } from 'lucide-react';
 
 function ResetPasswordContent() {

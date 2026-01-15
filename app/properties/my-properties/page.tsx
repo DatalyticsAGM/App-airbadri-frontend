@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { PropertyGrid } from '@/components/properties/property-grid';
+import { PropertyGrid } from '@/components/properties';
 import { mockProperties } from '@/lib/properties/mock-properties';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';

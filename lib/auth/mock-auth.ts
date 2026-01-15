@@ -23,7 +23,13 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  avatar?: string;
   createdAt: string;
+}
+
+export interface UpdateProfileData {
+  fullName?: string;
+  avatar?: string;
 }
 
 export interface AuthResponse {
@@ -447,6 +453,42 @@ export const mockAuth = {
       success: true,
       message: 'Contraseña actualizada correctamente',
     };
+  },
+
+  /**
+   * Actualiza el perfil del usuario actual
+   * 
+   * @param data - Datos a actualizar (fullName, avatar)
+   * @returns Promise con el usuario actualizado
+   */
+  async updateProfile(data: UpdateProfileData): Promise<User> {
+    await delay(NETWORK_DELAY);
+
+    const session = getSession();
+    if (!session) {
+      throw new Error('No hay sesión activa');
+    }
+
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.id === session.userId);
+
+    if (userIndex === -1) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Actualizar campos permitidos
+    if (data.fullName !== undefined) {
+      users[userIndex].fullName = data.fullName;
+    }
+    if (data.avatar !== undefined) {
+      users[userIndex].avatar = data.avatar;
+    }
+
+    saveUsers(users);
+
+    // Retornar usuario sin contraseña
+    const { password, ...userWithoutPassword } = users[userIndex];
+    return userWithoutPassword;
   },
 };
 
