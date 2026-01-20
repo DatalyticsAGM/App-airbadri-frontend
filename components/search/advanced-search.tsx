@@ -7,10 +7,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Calendar, Users, MapPin, X } from 'lucide-react';
+import { Search, Calendar, Users, MapPin, X, Wifi, Car, Waves, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -51,6 +52,10 @@ export function AdvancedSearch({ onSearch, initialFilters }: AdvancedSearchProps
   const [propertyType, setPropertyType] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [minRating, setMinRating] = useState<number>(0);
+  const [instantBooking, setInstantBooking] = useState(false);
+  const [superhost, setSuperhost] = useState(false);
+  const [flexibleCancellation, setFlexibleCancellation] = useState(false);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
   const handleSearch = () => {
     const filters: PropertyFilters & { searchText?: string; checkIn?: Date; checkOut?: Date; guests?: number } = {
@@ -61,6 +66,7 @@ export function AdvancedSearch({ onSearch, initialFilters }: AdvancedSearchProps
       },
       ...(propertyType && { propertyType }),
       ...(minRating > 0 && { minRating }),
+      ...(selectedAmenities.length > 0 && { amenities: selectedAmenities }),
       searchText: searchText || undefined,
       checkIn,
       checkOut,
@@ -78,7 +84,22 @@ export function AdvancedSearch({ onSearch, initialFilters }: AdvancedSearchProps
     setPropertyType('');
     setPriceRange([0, 1000]);
     setMinRating(0);
+    setInstantBooking(false);
+    setSuperhost(false);
+    setFlexibleCancellation(false);
+    setSelectedAmenities([]);
     onSearch({});
+  };
+
+  /**
+   * Maneja el toggle de amenities
+   */
+  const handleAmenityToggle = (amenity: string) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenity)
+        ? prev.filter(a => a !== amenity)
+        : [...prev, amenity]
+    );
   };
 
   return (
@@ -240,6 +261,90 @@ export function AdvancedSearch({ onSearch, initialFilters }: AdvancedSearchProps
             <SelectItem value="5">5 estrellas</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Additional Filters */}
+      <div className="space-y-3 pt-2 border-t border-airbnb-bg-300">
+        <h4 className="font-semibold text-airbnb-text-100">Filtros adicionales</h4>
+        
+        {/* Instant Booking */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="instant-booking"
+            checked={instantBooking}
+            onCheckedChange={(checked) => setInstantBooking(checked === true)}
+          />
+          <Label htmlFor="instant-booking" className="flex items-center gap-2 cursor-pointer">
+            <CheckCircle className="w-4 h-4" />
+            Reserva instantánea
+          </Label>
+        </div>
+
+        {/* Superhost */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="superhost"
+            checked={superhost}
+            onCheckedChange={(checked) => setSuperhost(checked === true)}
+          />
+          <Label htmlFor="superhost" className="flex items-center gap-2 cursor-pointer">
+            <CheckCircle className="w-4 h-4" />
+            Superhost
+          </Label>
+        </div>
+
+        {/* Flexible Cancellation */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="flexible-cancellation"
+            checked={flexibleCancellation}
+            onCheckedChange={(checked) => setFlexibleCancellation(checked === true)}
+          />
+          <Label htmlFor="flexible-cancellation" className="flex items-center gap-2 cursor-pointer">
+            <CheckCircle className="w-4 h-4" />
+            Cancelación flexible
+          </Label>
+        </div>
+      </div>
+
+      {/* Popular Amenities */}
+      <div className="space-y-3 pt-2 border-t border-airbnb-bg-300">
+        <h4 className="font-semibold text-airbnb-text-100">Amenities populares</h4>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="amenity-wifi"
+              checked={selectedAmenities.includes('wifi')}
+              onCheckedChange={() => handleAmenityToggle('wifi')}
+            />
+            <Label htmlFor="amenity-wifi" className="flex items-center gap-2 cursor-pointer">
+              <Wifi className="w-4 h-4" />
+              WiFi
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="amenity-parking"
+              checked={selectedAmenities.includes('parking')}
+              onCheckedChange={() => handleAmenityToggle('parking')}
+            />
+            <Label htmlFor="amenity-parking" className="flex items-center gap-2 cursor-pointer">
+              <Car className="w-4 h-4" />
+              Parking
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="amenity-pool"
+              checked={selectedAmenities.includes('pool')}
+              onCheckedChange={() => handleAmenityToggle('pool')}
+            />
+            <Label htmlFor="amenity-pool" className="flex items-center gap-2 cursor-pointer">
+              <Waves className="w-4 h-4" />
+              Piscina
+            </Label>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}
