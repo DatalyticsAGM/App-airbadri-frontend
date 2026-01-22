@@ -239,7 +239,7 @@ export default function MyBookingsPage() {
                       </div>
 
                       <div className="flex gap-3">
-                        <Link href={`/bookings/${booking.id}`}>
+                        <Link href={`/bookings/detail?id=${booking.id}`}>
                           <Button variant="outline" size="sm">
                             Ver Detalles
                           </Button>

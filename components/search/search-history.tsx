@@ -198,3 +198,5 @@ export function SearchHistoryComponent({ onSelectSearch }: SearchHistoryProps) {
 
 
 
+
+

@@ -21,7 +21,6 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
 import { mockBookings } from '@/lib/bookings/mock-bookings';
-import { mockProperties } from '@/lib/properties/mock-properties';
 import type { Property } from '@/lib/properties/types';
 import { useRouter } from 'next/navigation';
 
@@ -91,8 +90,10 @@ export function BookingForm({ property }: BookingFormProps) {
   }, [checkIn, checkOut, property.id]);
 
   const onSubmit = async (values: BookingFormValues) => {
+    // Si no está autenticado, redirigir al login con los parámetros para volver
     if (!isAuthenticated || !user) {
-      router.push('/auth/login');
+      const checkoutUrl = `/checkout?propertyId=${property.id}&checkIn=${values.checkIn.toISOString()}&checkOut=${values.checkOut.toISOString()}&guests=${values.guests}`;
+      router.push(`/auth/login?redirect=${encodeURIComponent(checkoutUrl)}`);
       return;
     }
 
@@ -106,17 +107,9 @@ export function BookingForm({ property }: BookingFormProps) {
         return;
       }
 
-      const booking = await mockBookings.createBooking(
-        {
-          propertyId: property.id,
-          checkIn: values.checkIn.toISOString(),
-          checkOut: values.checkOut.toISOString(),
-          guests: values.guests,
-        },
-        user.id
-      );
-
-      router.push(`/bookings/${booking.id}`);
+      // Redirigir al checkout en lugar de crear la reserva directamente
+      const checkoutUrl = `/checkout?propertyId=${property.id}&checkIn=${values.checkIn.toISOString()}&checkOut=${values.checkOut.toISOString()}&guests=${values.guests}`;
+      router.push(checkoutUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al realizar la reserva');
     } finally {
@@ -250,9 +243,15 @@ export function BookingForm({ property }: BookingFormProps) {
         <Button
           type="submit"
           className="w-full bg-airbnb-primary-100 hover:bg-airbnb-primary-100/90 text-white"
-          disabled={isLoading || !availability?.available || totalPrice === 0}
+          disabled={
+            isLoading || 
+            totalPrice === 0 || 
+            !checkIn || 
+            !checkOut || 
+            (availability !== null && !availability.available)
+          }
         >
-          {isLoading ? 'Reservando...' : isAuthenticated ? 'Reservar' : 'Inicia sesión para reservar'}
+          {isLoading ? 'Cargando...' : isAuthenticated ? 'Continuar al Checkout' : 'Inicia sesión para reservar'}
         </Button>
       </form>
     </div>

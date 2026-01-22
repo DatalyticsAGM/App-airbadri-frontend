@@ -6,31 +6,20 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { PropertyGrid, PropertyFiltersComponent } from '@/components/properties';
-import {
-  AdvancedSearch,
-  SearchInput,
-  QuickFilters,
-  SearchResults,
-  SearchHistoryComponent,
-} from '@/components/search';
+import { PropertyGrid } from '@/components/properties/property-grid';
+import { PropertyFiltersComponent } from '@/components/properties/property-filters';
 import { mockProperties } from '@/lib/properties/mock-properties';
 import { initializeMockProperties } from '@/lib/properties/mock-data';
-import { saveSearch } from '@/lib/search/mock-search-history';
 import type { Property, PropertyFilters } from '@/lib/properties/types';
-import type { SearchSuggestion } from '@/lib/search/types';
-import { useAuth } from '@/lib/auth/auth-context';
 
 export default function PropertiesPage() {
-  const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<PropertyFilters>({});
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // Inicializar datos de ejemplo si no existen
@@ -50,94 +39,26 @@ export default function PropertiesPage() {
     };
 
     loadProperties();
-
-    // Escuchar búsquedas desde el header
-    const handleHeaderSearch = (event: CustomEvent<{ query: string }>) => {
-      setSearchQuery(event.detail.query);
-    };
-
-    window.addEventListener('header-search', handleHeaderSearch as EventListener);
-
-    // Leer query params de la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-
-    return () => {
-      window.removeEventListener('header-search', handleHeaderSearch as EventListener);
-    };
   }, []);
 
-  /**
-   * Aplica filtros y búsqueda
-   */
-  const applyFilters = useCallback(async () => {
-    try {
-      // Combinar búsqueda de texto con filtros
-      const searchFilters: PropertyFilters = {
-        ...filters,
-        ...(searchQuery && { searchText: searchQuery, location: searchQuery }),
-      };
-
-      if (Object.keys(searchFilters).length === 0) {
+  useEffect(() => {
+    // Aplicar filtros cuando cambien
+    const applyFilters = async () => {
+      if (Object.keys(filters).length === 0) {
         setFilteredProperties(properties);
         return;
       }
 
-      const filtered = await mockProperties.searchProperties(searchFilters);
-      setFilteredProperties(filtered);
-
-      // Guardar búsqueda en historial si hay usuario autenticado
-      if (user && (searchQuery || Object.keys(filters).length > 0)) {
-        await saveSearch(
-          user.id,
-          searchQuery || 'Búsqueda con filtros',
-          {
-            location: filters.location,
-            priceRange: filters.priceRange,
-            guests: filters.guests,
-          },
-          filtered.length
-        );
+      try {
+        const filtered = await mockProperties.searchProperties(filters);
+        setFilteredProperties(filtered);
+      } catch (error) {
+        console.error('Error aplicando filtros:', error);
       }
-    } catch (error) {
-      console.error('Error aplicando filtros:', error);
-    }
-  }, [filters, properties, searchQuery, user]);
+    };
 
-  useEffect(() => {
     applyFilters();
-  }, [applyFilters]);
-
-  /**
-   * Maneja la búsqueda desde el SearchInput
-   */
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    // Los filtros se aplicarán automáticamente en el useEffect
-  }, []);
-
-  /**
-   * Maneja la selección de una sugerencia
-   */
-  const handleSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
-    if (suggestion.type === 'property' && suggestion.propertyId) {
-      // Redirigir a la página de detalle de la propiedad
-      window.location.href = `/properties/${suggestion.propertyId}`;
-    } else {
-      // Usar el texto de la sugerencia como búsqueda
-      setSearchQuery(suggestion.text);
-    }
-  }, []);
-
-  /**
-   * Maneja el cambio de filtros desde QuickFilters
-   */
-  const handleQuickFiltersChange = useCallback((newFilters: PropertyFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
+  }, [filters, properties]);
 
   return (
     <div className="min-h-screen bg-airbnb-bg-100 flex flex-col">
@@ -149,48 +70,15 @@ export default function PropertiesPage() {
             <h1 className="text-4xl font-bold text-airbnb-text-100 mb-2">
               Explorar Propiedades
             </h1>
-            <p className="text-lg text-airbnb-text-200 mb-6">
+            <p className="text-lg text-airbnb-text-200">
               Encuentra el lugar perfecto para tu próxima aventura
             </p>
-
-            {/* Barra de búsqueda - Solo visible en mobile */}
-            <div className="mb-6 md:hidden">
-              <SearchInput
-                onSearch={handleSearch}
-                onSuggestionSelect={handleSuggestionSelect}
-                placeholder="Buscar por ubicación, propiedad..."
-                initialValue={searchQuery}
-              />
-            </div>
-
-            {/* Filtros rápidos */}
-            <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-airbnb-bg-300">
-              <QuickFilters
-                onFiltersChange={handleQuickFiltersChange}
-                activeFilters={filters}
-              />
-            </div>
-          </div>
-
-          {/* Advanced Search - Mobile/Tablet */}
-          <div className="lg:hidden mb-6">
-            <AdvancedSearch
-              onSearch={setFilters}
-              initialFilters={filters}
-            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar con filtros */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-8 space-y-6">
-                {/* Advanced Search - Desktop */}
-                <div className="hidden lg:block">
-                  <AdvancedSearch
-                    onSearch={setFilters}
-                    initialFilters={filters}
-                  />
-                </div>
+              <div className="sticky top-8">
                 <PropertyFiltersComponent
                   filters={filters}
                   onFiltersChange={setFilters}
@@ -199,13 +87,12 @@ export default function PropertiesPage() {
               </div>
             </aside>
 
-            {/* Resultados de búsqueda */}
+            {/* Grid de propiedades */}
             <div className="lg:col-span-3">
-              <SearchResults
-                properties={filteredProperties}
-                loading={loading}
-                searchQuery={searchQuery}
-              />
+              <div className="mb-4 text-sm text-airbnb-text-200">
+                {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
+              </div>
+              <PropertyGrid properties={filteredProperties} loading={loading} />
             </div>
           </div>
         </div>

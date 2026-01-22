@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth/auth-context';
 import { LayoutClient } from './layout-client';
+import { Toaster } from '@/components/ui/toaster';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <LayoutClient />
           {children}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
