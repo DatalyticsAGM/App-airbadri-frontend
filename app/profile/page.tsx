@@ -11,8 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getBookingService, getPropertyService } from '@/lib/api/service-factory';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, Calendar, Settings } from 'lucide-react';
@@ -28,6 +27,8 @@ export default function ProfilePage() {
     bookingsCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
+  const bookingService = getBookingService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -40,8 +41,8 @@ export default function ProfilePage() {
 
       try {
         const [properties, bookings] = await Promise.all([
-          mockProperties.getPropertiesByHost(user.id),
-          mockBookings.getBookingsByUser(user.id),
+          propertyService.getPropertiesByHost(user.id),
+          bookingService.getBookingsByUser(user.id),
         ]);
 
         setStats({
@@ -178,6 +179,11 @@ export default function ProfilePage() {
                 <Link href="/properties">
                   <Button variant="outline" className="w-full">
                     Explorar Propiedades
+                  </Button>
+                </Link>
+                <Link href="/auth/change-password">
+                  <Button variant="outline" className="w-full">
+                    Cambiar contraseña
                   </Button>
                 </Link>
               </div>

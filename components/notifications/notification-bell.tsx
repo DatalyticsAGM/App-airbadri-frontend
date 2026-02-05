@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockNotifications } from '@/lib/notifications/mock-notifications';
+import { getNotificationService } from '@/lib/api/service-factory';
 import { NotificationList } from './notification-list';
 import Link from 'next/link';
 import type { Notification } from '@/lib/notifications/types';
@@ -29,6 +29,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const notificationService = getNotificationService();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -44,8 +45,8 @@ export function NotificationBell() {
     setLoading(true);
     try {
       const [allNotifications, count] = await Promise.all([
-        mockNotifications.getNotificationsByUser(user.id),
-        mockNotifications.getUnreadCount(user.id),
+        notificationService.getNotificationsByUser(user.id),
+        notificationService.getUnreadCount(user.id),
       ]);
       setNotifications(allNotifications.slice(0, 5)); // Mostrar solo las 5 más recientes
       setUnreadCount(count);
@@ -60,7 +61,7 @@ export function NotificationBell() {
     if (!user) return;
 
     try {
-      await mockNotifications.markAsRead(id, user.id);
+      await notificationService.markAsRead(id);
       loadNotifications();
     } catch (error) {
       console.error('Error marking notification as read:', error);

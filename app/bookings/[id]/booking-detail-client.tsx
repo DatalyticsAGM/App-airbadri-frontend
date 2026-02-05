@@ -11,8 +11,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getBookingService, getPropertyService } from '@/lib/api/service-factory';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +47,8 @@ export function BookingDetailPageClient() {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const bookingService = getBookingService();
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -65,7 +66,7 @@ export function BookingDetailPageClient() {
           return;
         }
         
-        const bookingData = await mockBookings.getBookingById(id);
+        const bookingData = await bookingService.getBookingById(id);
 
         if (!bookingData) {
           router.push('/bookings');
@@ -81,7 +82,7 @@ export function BookingDetailPageClient() {
         setBooking(bookingData);
 
         // Cargar información de la propiedad
-        const propertyData = await mockProperties.getPropertyById(bookingData.propertyId);
+        const propertyData = await propertyService.getPropertyById(bookingData.propertyId);
         setProperty(propertyData);
 
         // Mostrar mensaje de éxito si viene del checkout
@@ -124,7 +125,7 @@ export function BookingDetailPageClient() {
     }
 
     try {
-      await mockBookings.cancelBooking(booking.id);
+      await bookingService.cancelBooking(booking.id);
       setBooking({ ...booking, status: 'cancelled' });
     } catch (error) {
       console.error('Error cancelando reserva:', error);

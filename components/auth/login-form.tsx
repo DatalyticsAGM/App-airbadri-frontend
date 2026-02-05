@@ -5,7 +5,7 @@
  * 
  * Características:
  * - Validación de campos en tiempo real
- * - Manejo de errores del servidor (MOCK)
+ * - Manejo de errores del servidor
  * - Estados de carga durante el submit
  * - Redirección automática después del login exitoso
  */

@@ -11,8 +11,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PropertyGrid } from '@/components/properties/property-grid';
 import { PropertyFiltersComponent } from '@/components/properties/property-filters';
-import { mockProperties } from '@/lib/properties/mock-properties';
-import { initializeMockProperties } from '@/lib/properties/mock-data';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Property, PropertyFilters } from '@/lib/properties/types';
 
 export default function PropertiesPage() {
@@ -20,15 +19,13 @@ export default function PropertiesPage() {
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<PropertyFilters>({});
+  const propertyService = getPropertyService();
 
   useEffect(() => {
-    // Inicializar datos de ejemplo si no existen
-    initializeMockProperties();
-
     // Cargar propiedades
     const loadProperties = async () => {
       try {
-        const allProperties = await mockProperties.getAllProperties();
+        const allProperties = await propertyService.getAllProperties();
         setProperties(allProperties);
         setFilteredProperties(allProperties);
       } catch (error) {
@@ -50,7 +47,7 @@ export default function PropertiesPage() {
       }
 
       try {
-        const filtered = await mockProperties.searchProperties(filters);
+        const filtered = await propertyService.searchProperties(filters);
         setFilteredProperties(filtered);
       } catch (error) {
         console.error('Error aplicando filtros:', error);

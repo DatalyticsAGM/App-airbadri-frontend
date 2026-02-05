@@ -2,19 +2,55 @@
  * Auth Service (API Real)
  * 
  * Implementación del servicio de autenticación usando API real.
- * TODO: Implementar cuando el backend esté listo.
+ * Nota: Este servicio asume que `NEXT_PUBLIC_API_URL` incluye el prefijo `/api`.
+ * Ej: NEXT_PUBLIC_API_URL="http://localhost:3333/api"
  */
 
 import { apiClient } from '../client';
 import type { IAuthService } from '../interfaces';
-import type { AuthResponse, ResetPasswordResponse, User } from '../../auth/mock-auth';
+import type { AuthResponse, ResetPasswordResponse, User, ValidateResetTokenResponse } from '../../auth/types';
+
+function normalizeAuthResponse(raw: any): AuthResponse {
+  const token =
+    raw?.token ??
+    raw?.accessToken ??
+    raw?.data?.token ??
+    raw?.data?.accessToken;
+
+  const user =
+    raw?.user ??
+    raw?.data?.user ??
+    raw?.profile ??
+    raw?.data?.profile;
+
+  const success =
+    typeof raw?.success === 'boolean'
+      ? raw.success
+      : Boolean(token || user);
+
+  const error =
+    raw?.error ??
+    raw?.message ??
+    raw?.error?.message ??
+    raw?.data?.error?.message;
+
+  return {
+    success,
+    user,
+    token,
+    error,
+  };
+}
 
 /**
  * Servicio de autenticación usando API real
  */
 export const authService: IAuthService = {
   async signup(data) {
-    const response = await apiClient.post<AuthResponse>('/auth/signup', data);
+    // Backend real (según cURL compartido):
+    // POST http://localhost:3333/api/auth/register
+    const raw = await apiClient.post<any>('/auth/register', data);
+    const response = normalizeAuthResponse(raw);
     if (response.token) {
       apiClient.setToken(response.token);
     }
@@ -22,10 +58,11 @@ export const authService: IAuthService = {
   },
 
   async login(email, password) {
-    const response = await apiClient.post<AuthResponse>('/auth/login', {
+    const raw = await apiClient.post<any>('/auth/login', {
       email,
       password,
     });
+    const response = normalizeAuthResponse(raw);
     if (response.token) {
       apiClient.setToken(response.token);
     }
@@ -48,6 +85,8 @@ export const authService: IAuthService = {
   },
 
   isAuthenticated() {
+    // Si el backend usa cookies httpOnly, el token puede no estar disponible en el cliente.
+    // La fuente de verdad para la UI es `AuthContext.user` (cargado desde /auth/me).
     return apiClient.getToken() !== null;
   },
 
@@ -61,6 +100,37 @@ export const authService: IAuthService = {
     return apiClient.post<ResetPasswordResponse>('/auth/reset-password', {
       token,
       password,
+    });
+  },
+
+  async validateResetToken(token) {
+    try {
+      const raw = await apiClient.get<any>(
+        `/auth/reset-password/validate?token=${encodeURIComponent(token)}`
+      );
+
+      const valid =
+        typeof raw?.valid === 'boolean'
+          ? raw.valid
+          : typeof raw?.success === 'boolean'
+            ? raw.success
+            : true; // si el backend responde 200 sin body estándar, asumimos válido
+
+      const message = raw?.message ?? raw?.error?.message;
+
+      return { valid, message } satisfies ValidateResetTokenResponse;
+    } catch (error) {
+      return {
+        valid: false,
+        message: error instanceof Error ? error.message : 'Token inválido',
+      };
+    }
+  },
+
+  async changePassword(currentPassword, newPassword) {
+    return apiClient.post<ResetPasswordResponse>('/auth/change-password', {
+      currentPassword,
+      password: newPassword,
     });
   },
 };

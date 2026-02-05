@@ -1,4 +1,5 @@
 ---
+description: "Regla para generar y mantener actualizado un diagrama de flujo de usuarios en Excalidraw, basado en milestones e historias de usuario del proyecto frontend."
 alwaysApply: false
 ---
 Quiero que actues ahora como un product owner y arma un driagrama para excalidraw basado en los milestones y historias de los usuarios.

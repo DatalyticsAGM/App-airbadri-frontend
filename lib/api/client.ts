@@ -31,7 +31,11 @@ class ApiClient {
   private token: string | null = null;
 
   constructor(baseURL: string = process.env.NEXT_PUBLIC_API_URL || '') {
-    this.baseURL = baseURL;
+    // Si baseURL viene vacío, el navegador haría requests relativos (ej: localhost:3000).
+    // Forzamos un fallback seguro al backend local.
+    this.baseURL = baseURL && baseURL.trim().length > 0
+      ? baseURL
+      : 'http://localhost:3333/api';
   }
 
   /**
@@ -79,14 +83,21 @@ class ApiClient {
     try {
       const response = await fetch(url, {
         ...options,
+        // Muchos backends usan cookies httpOnly para auth. Si no incluimos credenciales,
+        // el navegador no guardará/enviará cookies cross-origin (ej: 3000 -> 3333).
+        credentials: options.credentials ?? 'include',
         headers,
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json().catch(() => ({} as any));
+        const message =
+          (errorData && (errorData.message as string)) ||
+          (errorData?.error && (errorData.error.message as string)) ||
+          `HTTP error! status: ${response.status}`;
         throw new ApiClientError(
-          errorData.message || `HTTP error! status: ${response.status}`,
-          errorData.code,
+          message,
+          (errorData && (errorData.code as string)) || errorData?.error?.code,
           response.status
         );
       }

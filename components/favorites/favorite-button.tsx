@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockFavorites } from '@/lib/favorites/mock-favorites';
+import { favoritesService } from '@/lib/favorites/favorites-service';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useRouter } from 'next/navigation';
 
@@ -41,7 +41,7 @@ export function FavoriteButton({
     if (!user) return;
     
     try {
-      const favorite = await mockFavorites.isFavorite(user.id, propertyId);
+      const favorite = await favoritesService.isFavorite(user.id, propertyId);
       setIsFavorite(favorite);
     } catch (error) {
       console.error('Error checking favorite:', error);
@@ -59,10 +59,10 @@ export function FavoriteButton({
     setIsLoading(true);
     try {
       if (isFavorite) {
-        await mockFavorites.removeFavorite(user.id, propertyId);
+        await favoritesService.removeFavorite(user.id, propertyId);
         setIsFavorite(false);
       } else {
-        await mockFavorites.addFavorite({
+        await favoritesService.addFavorite({
           userId: user.id,
           propertyId,
         });

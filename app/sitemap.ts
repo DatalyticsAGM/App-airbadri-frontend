@@ -5,7 +5,7 @@
  */
 
 import { MetadataRoute } from 'next';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://airbnb.example.com';
@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Páginas dinámicas de propiedades
   try {
-    const properties = await mockProperties.getAllProperties();
+    const properties = await getPropertyService().getAllProperties();
     const propertyPages: MetadataRoute.Sitemap = properties.map((property) => ({
       url: `${baseUrl}/properties/${property.id}`,
       lastModified: new Date(property.updatedAt),

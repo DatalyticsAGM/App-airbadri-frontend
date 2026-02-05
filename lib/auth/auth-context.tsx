@@ -17,7 +17,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { mockAuth, type User, type ResetPasswordResponse } from './mock-auth';
+import type { User, ResetPasswordResponse, ValidateResetTokenResponse } from './types';
+import { getAuthService } from '@/lib/api/service-factory';
 
 /**
  * Tipo del contexto de autenticación
@@ -31,6 +32,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   forgotPassword: (email: string) => Promise<ResetPasswordResponse>;
   resetPassword: (token: string, newPassword: string) => Promise<ResetPasswordResponse>;
+  validateResetToken: (token: string) => Promise<ValidateResetTokenResponse>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
 }
 
@@ -45,6 +48,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const authService = getAuthService();
 
   /**
    * Carga el usuario actual al montar el componente
@@ -58,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const loadUser = async () => {
     try {
-      const currentUser = await mockAuth.getCurrentUser();
+      const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
       console.error('Error cargando usuario:', error);
@@ -73,15 +77,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const login = async (email: string, password: string) => {
     try {
-      const response = await mockAuth.login(email, password);
-      if (response.success && response.user) {
-        setUser(response.user);
+      const response = await authService.login(email, password);
+      if (response.success) {
+        // Algunos backends autentican por cookie y no devuelven `user` en el login.
+        if (response.user) {
+          setUser(response.user);
+        } else {
+          await refreshUser();
+        }
         return { success: true };
       }
-      return { success: false, error: response.error || 'Error al iniciar sesión' };
+      return { success: false, error: response.error || 'Credenciales inválidas' };
     } catch (error) {
       console.error('Error en login:', error);
-      return { success: false, error: 'Error al iniciar sesión' };
+      return { success: false, error: error instanceof Error ? error.message : 'Error al iniciar sesión' };
     }
   };
 
@@ -90,15 +99,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const signup = async (email: string, password: string, fullName: string) => {
     try {
-      const response = await mockAuth.signup(email, password, fullName);
-      if (response.success && response.user) {
-        setUser(response.user);
+      const response = await authService.signup({ email, password, fullName });
+      if (response.success) {
+        if (response.user) {
+          setUser(response.user);
+        } else {
+          await refreshUser();
+        }
         return { success: true };
       }
       return { success: false, error: response.error || 'Error al registrar usuario' };
     } catch (error) {
       console.error('Error en signup:', error);
-      return { success: false, error: 'Error al registrar usuario' };
+      return { success: false, error: error instanceof Error ? error.message : 'Error al registrar usuario' };
     }
   };
 
@@ -107,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const logout = async () => {
     try {
-      await mockAuth.logout();
+      await authService.logout();
       setUser(null);
     } catch (error) {
       console.error('Error en logout:', error);
@@ -119,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const forgotPassword = async (email: string) => {
     try {
-      return await mockAuth.forgotPassword(email);
+      return await authService.forgotPassword(email);
     } catch (error) {
       console.error('Error en forgotPassword:', error);
       return { success: false, error: 'Error al solicitar reset de contraseña' };
@@ -131,10 +144,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const resetPassword = async (token: string, newPassword: string) => {
     try {
-      return await mockAuth.resetPassword(token, newPassword);
+      return await authService.resetPassword(token, newPassword);
     } catch (error) {
       console.error('Error en resetPassword:', error);
       return { success: false, error: 'Error al resetear contraseña' };
+    }
+  };
+
+  /**
+   * Valida que el token de reset sea válido antes de mostrar el formulario
+   */
+  const validateResetToken = async (token: string) => {
+    return authService.validateResetToken(token);
+  };
+
+  /**
+   * Cambia la contraseña del usuario autenticado
+   */
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      const result = await authService.changePassword(currentPassword, newPassword);
+      if (result.success) {
+        return { success: true as const };
+      }
+      return { success: false as const, error: result.error || 'Error al cambiar la contraseña' };
+    } catch (error) {
+      console.error('Error en changePassword:', error);
+      return {
+        success: false as const,
+        error: error instanceof Error ? error.message : 'Error al cambiar la contraseña',
+      };
     }
   };
 
@@ -143,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const refreshUser = async () => {
     try {
-      const currentUser = await mockAuth.getCurrentUser();
+      const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
       console.error('Error refrescando usuario:', error);
@@ -160,6 +199,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     forgotPassword,
     resetPassword,
+    validateResetToken,
+    changePassword,
     refreshUser,
   };
 

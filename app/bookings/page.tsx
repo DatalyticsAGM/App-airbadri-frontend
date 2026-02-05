@@ -10,8 +10,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getBookingService, getPropertyService } from '@/lib/api/service-factory';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +43,8 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<BookingWithProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const bookingService = getBookingService();
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -55,12 +56,12 @@ export default function MyBookingsPage() {
       if (!user) return;
 
       try {
-        const userBookings = await mockBookings.getBookingsByUser(user.id);
+        const userBookings = await bookingService.getBookingsByUser(user.id);
         
         // Cargar información de propiedades
         const bookingsWithProperties = await Promise.all(
           userBookings.map(async (booking) => {
-            const property = await mockProperties.getPropertyById(booking.propertyId);
+            const property = await propertyService.getPropertyById(booking.propertyId);
             return { ...booking, property };
           })
         );
@@ -84,7 +85,7 @@ export default function MyBookingsPage() {
     }
 
     try {
-      await mockBookings.cancelBooking(bookingId);
+      await bookingService.cancelBooking(bookingId);
       setBookings(bookings.map(b => 
         b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
       ));

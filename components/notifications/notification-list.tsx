@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockNotifications } from '@/lib/notifications/mock-notifications';
+import { getNotificationService } from '@/lib/api/service-factory';
 import Link from 'next/link';
 import type { Notification } from '@/lib/notifications/types';
 import { CheckCheck } from 'lucide-react';
@@ -20,6 +20,7 @@ export function NotificationList() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [loading, setLoading] = useState(true);
+  const notificationService = getNotificationService();
 
   useEffect(() => {
     if (user) {
@@ -32,7 +33,7 @@ export function NotificationList() {
 
     setLoading(true);
     try {
-      const allNotifications = await mockNotifications.getNotificationsByUser(user.id);
+      const allNotifications = await notificationService.getNotificationsByUser(user.id);
       
       if (filter === 'unread') {
         setNotifications(allNotifications.filter(n => !n.read));
@@ -50,7 +51,7 @@ export function NotificationList() {
     if (!user) return;
 
     try {
-      await mockNotifications.markAsRead(id, user.id);
+      await notificationService.markAsRead(id);
       loadNotifications();
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -61,7 +62,7 @@ export function NotificationList() {
     if (!user) return;
 
     try {
-      await mockNotifications.markAllAsRead(user.id);
+      await notificationService.markAllAsRead(user.id);
       loadNotifications();
     } catch (error) {
       console.error('Error marking all as read:', error);

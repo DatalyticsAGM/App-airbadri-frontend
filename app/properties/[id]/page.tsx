@@ -6,7 +6,7 @@
  */
 
 import { PropertyDetailPageClient } from './property-detail-client';
-import { mockPropertiesData } from '@/lib/properties/mock-data';
+import { getPropertyService } from '@/lib/api/service-factory';
 
 /**
  * Genera los parámetros estáticos para la página dinámica
@@ -15,11 +15,15 @@ import { mockPropertiesData } from '@/lib/properties/mock-data';
  * Retorna los IDs de las propiedades de ejemplo para pre-generarlas durante el build
  */
 export async function generateStaticParams() {
-  // Generar IDs basados en las propiedades de ejemplo
-  // Estas son las propiedades que se inicializan por defecto en el sistema
-  return mockPropertiesData.map((_, index) => ({
-    id: `prop_example_${index + 1}`,
-  }));
+  // En modo export estático, Next necesita saber qué IDs pre-generar.
+  // Usamos la API real para obtener la lista de propiedades.
+  try {
+    const properties = await getPropertyService().getAllProperties();
+    return properties.map((p) => ({ id: p.id }));
+  } catch {
+    // Si la API no está disponible en build-time, no generamos rutas.
+    return [];
+  }
 }
 
 /**

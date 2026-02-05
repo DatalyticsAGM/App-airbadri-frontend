@@ -11,7 +11,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { EditPropertyForm } from '@/components/properties';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import { useAuth } from '@/lib/auth/auth-context';
 import type { Property } from '@/lib/properties/types';
 
@@ -21,6 +21,7 @@ export default function EditPropertyPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -31,7 +32,7 @@ export default function EditPropertyPage() {
     const loadProperty = async () => {
       try {
         const id = params.id as string;
-        const prop = await mockProperties.getPropertyById(id);
+        const prop = await propertyService.getPropertyById(id);
         
         if (!prop) {
           router.push('/properties');

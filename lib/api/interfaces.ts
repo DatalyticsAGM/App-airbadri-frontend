@@ -2,10 +2,10 @@
  * Service Interfaces
  * 
  * Interfaces que definen los contratos para todos los servicios.
- * Permiten cambiar fácilmente entre implementaciones MOCK y API real.
+ * Mantienen una API estable para que la UI no dependa de detalles HTTP.
  */
 
-import type { User, AuthResponse, ResetPasswordResponse } from '../auth/mock-auth';
+import type { User, AuthResponse, ResetPasswordResponse, ValidateResetTokenResponse } from '../auth/types';
 import type { Property, CreatePropertyData, PropertyFilters } from '../properties/types';
 import type { Booking, CreateBookingData, BookingStatus } from '../bookings/types';
 import type { Review, CreateReviewData } from '../reviews/types';
@@ -22,6 +22,8 @@ export interface IAuthService {
   isAuthenticated(): boolean;
   forgotPassword(email: string): Promise<ResetPasswordResponse>;
   resetPassword(token: string, password: string): Promise<ResetPasswordResponse>;
+  validateResetToken(token: string): Promise<ValidateResetTokenResponse>;
+  changePassword(currentPassword: string, newPassword: string): Promise<ResetPasswordResponse>;
 }
 
 /**

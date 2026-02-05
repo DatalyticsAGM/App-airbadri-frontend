@@ -11,9 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockProperties } from '@/lib/properties/mock-properties';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
-import { mockReviews } from '@/lib/reviews/mock-reviews';
+import { getBookingService, getPropertyService, getReviewService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 import { Home, Calendar, DollarSign, Star, TrendingUp, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -31,6 +29,9 @@ export default function HostDashboardPage() {
     upcomingBookings: 0,
   });
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
+  const bookingService = getBookingService();
+  const reviewService = getReviewService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -49,7 +50,7 @@ export default function HostDashboardPage() {
     setLoading(true);
     try {
       // Cargar propiedades del host
-      const hostProperties = await mockProperties.getPropertiesByHost(user.id);
+      const hostProperties = await propertyService.getPropertiesByHost(user.id);
       setProperties(hostProperties);
 
       // Calcular estadísticas
@@ -60,7 +61,7 @@ export default function HostDashboardPage() {
       let upcomingCount = 0;
 
       for (const property of hostProperties) {
-        const bookings = await mockBookings.getBookingsByProperty(property.id);
+        const bookings = await bookingService.getBookingsByProperty(property.id);
         totalBookings += bookings.length;
 
         bookings.forEach((booking) => {
@@ -71,9 +72,14 @@ export default function HostDashboardPage() {
           }
         });
 
-        const ratingData = await mockReviews.calculateAverageRating(property.id);
-        if (ratingData.count > 0) {
-          totalRating += ratingData.average;
+        const reviews = await reviewService.getReviewsByProperty(property.id);
+        const count = reviews.length;
+        const average = count
+          ? reviews.reduce((acc, r) => acc + (r.rating?.overall || 0), 0) / count
+          : 0;
+
+        if (count > 0) {
+          totalRating += average;
           ratingCount++;
         }
       }

@@ -22,7 +22,7 @@ import {
   getRecentSearches,
   deleteSearch,
   clearSearchHistory,
-} from '@/lib/search/mock-search-history';
+} from '@/lib/search/search-history-service';
 import type { SearchHistory } from '@/lib/search/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { formatDistanceToNow } from 'date-fns';

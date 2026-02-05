@@ -10,7 +10,6 @@ import { Star, ThumbsUp } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import type { Review } from '@/lib/reviews/types';
-import { mockReviews } from '@/lib/reviews/mock-reviews';
 import { useState } from 'react';
 
 interface ReviewCardProps {
@@ -26,7 +25,9 @@ export function ReviewCard({ review, showHelpful = true }: ReviewCardProps) {
     if (hasMarkedHelpful) return;
     
     try {
-      await mockReviews.markAsHelpful(review.id);
+      // Implementación mínima: actualización optimista.
+      // Si el backend agrega un endpoint (ej: POST /reviews/:id/helpful),
+      // se puede conectar aquí sin tocar el resto del componente.
       setHelpfulCount(prev => prev + 1);
       setHasMarkedHelpful(true);
     } catch (error) {

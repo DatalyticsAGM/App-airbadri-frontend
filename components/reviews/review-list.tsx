@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Review, ReviewFilters } from '@/lib/reviews/types';
-import { mockReviews } from '@/lib/reviews/mock-reviews';
+import { getReviewService } from '@/lib/api/service-factory';
 
 interface ReviewListProps {
   propertyId: string;
@@ -36,6 +36,7 @@ export function ReviewList({
     sortBy: 'newest',
   });
   const [displayedCount, setDisplayedCount] = useState(limit);
+  const reviewService = getReviewService();
 
   useEffect(() => {
     loadReviews();
@@ -44,11 +45,36 @@ export function ReviewList({
   const loadReviews = async () => {
     setLoading(true);
     try {
-      const allReviews = await mockReviews.getReviewsByProperty(
-        propertyId,
-        filters
-      );
-      setReviews(allReviews);
+      // La API devuelve la lista base; los filtros se aplican en el cliente
+      // para mantener el componente simple y evitar endpoints extra.
+      const allReviews = await reviewService.getReviewsByProperty(propertyId);
+      let filtered = allReviews;
+
+      if (filters.minRating) {
+        filtered = filtered.filter((r) => (r.rating?.overall || 0) >= filters.minRating!);
+      }
+
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case 'newest':
+            filtered = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            break;
+          case 'oldest':
+            filtered = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            break;
+          case 'highest':
+            filtered = [...filtered].sort((a, b) => (b.rating?.overall || 0) - (a.rating?.overall || 0));
+            break;
+          case 'lowest':
+            filtered = [...filtered].sort((a, b) => (a.rating?.overall || 0) - (b.rating?.overall || 0));
+            break;
+          case 'most_helpful':
+            filtered = [...filtered].sort((a, b) => (b.helpful || 0) - (a.helpful || 0));
+            break;
+        }
+      }
+
+      setReviews(filtered);
       setDisplayedCount(limit);
     } catch (error) {
       console.error('Error loading reviews:', error);

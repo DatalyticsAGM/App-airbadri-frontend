@@ -6,12 +6,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +65,7 @@ export function EditPropertyForm({ property }: EditPropertyFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState('');
   const router = useRouter();
+  const propertyService = getPropertyService();
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
@@ -110,7 +111,7 @@ export function EditPropertyForm({ property }: EditPropertyFormProps) {
     setError(null);
 
     try {
-      const updatedProperty = await mockProperties.updateProperty(property.id, {
+      const updatedProperty = await propertyService.updateProperty(property.id, {
         ...values,
         location: {
           city: values.city,

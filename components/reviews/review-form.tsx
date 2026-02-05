@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { mockReviews } from '@/lib/reviews/mock-reviews';
+import { getReviewService } from '@/lib/api/service-factory';
 import type { RatingValue } from '@/lib/reviews/types';
 
 const reviewSchema = z.object({
@@ -58,6 +58,7 @@ export function ReviewForm({
 }: ReviewFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const reviewService = getReviewService();
 
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewSchema),
@@ -86,7 +87,7 @@ export function ReviewForm({
         ...(values.value && { value: values.value as RatingValue }),
       };
 
-      await mockReviews.createReview({
+      await reviewService.createReview({
         propertyId,
         userId,
         rating,

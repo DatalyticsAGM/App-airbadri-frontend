@@ -3,7 +3,7 @@
  */
 
 import { generatePropertyMetadata } from '@/lib/seo/metadata';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({
@@ -12,7 +12,7 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   try {
-    const property = await mockProperties.getPropertyById(params.id);
+    const property = await getPropertyService().getPropertyById(params.id);
     
     if (!property) {
       return {

@@ -21,7 +21,7 @@ import {
 import { ReviewForm } from '@/components/reviews/review-form';
 import { ShareButton } from './share-button';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockReviews } from '@/lib/reviews/mock-reviews';
+import { getReviewService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 
 interface PropertyDetailProps {
@@ -40,6 +40,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
   const [ratingData, setRatingData] = useState({ average: property.rating, count: property.reviewCount });
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const reviewService = getReviewService();
 
   useEffect(() => {
     loadRatingData();
@@ -47,8 +48,12 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
 
   const loadRatingData = async () => {
     try {
-      const data = await mockReviews.calculateAverageRating(property.id);
-      setRatingData(data);
+      const reviews = await reviewService.getReviewsByProperty(property.id);
+      const count = reviews.length;
+      const average = count
+        ? reviews.reduce((acc, r) => acc + (r.rating?.overall || 0), 0) / count
+        : 0;
+      setRatingData({ average, count });
     } catch (error) {
       console.error('Error loading rating data:', error);
     }

@@ -6,7 +6,8 @@
  */
 
 import { BookingDetailPageClient } from './booking-detail-client';
-import { mockBookingsData } from '@/lib/bookings/mock-data';
+import { apiClient } from '@/lib/api/client';
+import type { Booking } from '@/lib/bookings/types';
 
 /**
  * Permite que Next.js genere páginas dinámicas bajo demanda
@@ -22,11 +23,15 @@ export const dynamicParams = true;
  * Las reservas creadas dinámicamente se generarán bajo demanda gracias a dynamicParams = true.
  */
 export async function generateStaticParams() {
-  // Retornar IDs de reservas de ejemplo para pre-generarlas
-  // Las reservas dinámicas se generarán bajo demanda
-  return mockBookingsData.map((_, index) => ({
-    id: `booking_example_${index + 1}`,
-  }));
+  // En export estático, Next necesita conocer los IDs en build-time.
+  // Intentamos obtenerlos desde la API real. Si no hay acceso (p.ej. requiere auth),
+  // devolvemos un arreglo vacío y la app puede usar la ruta estática `/bookings/detail?id=...`.
+  try {
+    const bookings = await apiClient.get<Booking[]>('/bookings');
+    return bookings.map((b) => ({ id: b.id }));
+  } catch {
+    return [];
+  }
 }
 
 /**

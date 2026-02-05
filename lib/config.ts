@@ -10,8 +10,7 @@
  */
 export const config = {
   // API
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
-  useMockServices: process.env.NEXT_PUBLIC_USE_MOCK_SERVICES !== 'false',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api',
 
   // App
   appName: process.env.NEXT_PUBLIC_APP_NAME || 'Airbnb Clone',
@@ -39,9 +38,9 @@ export const config = {
 export function validateConfig(): void {
   const errors: string[] = [];
 
-  // En producción, validar que la API URL esté configurada si no se usan MOCK
-  if (config.isProduction && !config.useMockServices && !config.apiUrl) {
-    errors.push('NEXT_PUBLIC_API_URL is required when not using MOCK services');
+  // En producción, validar que la API URL esté configurada
+  if (config.isProduction && !config.apiUrl) {
+    errors.push('NEXT_PUBLIC_API_URL is required');
   }
 
   if (errors.length > 0) {

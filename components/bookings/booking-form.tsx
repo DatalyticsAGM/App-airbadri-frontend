@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
+import { getBookingService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 import { useRouter } from 'next/navigation';
 
@@ -49,6 +49,7 @@ export function BookingForm({ property }: BookingFormProps) {
   const [availability, setAvailability] = useState<{ available: boolean } | null>(null);
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const bookingService = getBookingService();
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -73,7 +74,7 @@ export function BookingForm({ property }: BookingFormProps) {
     if (checkIn && checkOut && checkOut > checkIn) {
       const checkAvailability = async () => {
         try {
-          const result = await mockBookings.checkAvailability(
+          const result = await bookingService.checkAvailability(
             property.id,
             checkIn.toISOString(),
             checkOut.toISOString()

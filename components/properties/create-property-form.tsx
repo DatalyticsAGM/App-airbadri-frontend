@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,6 +62,7 @@ export function CreatePropertyForm() {
   const [imageUrl, setImageUrl] = useState('');
   const { user } = useAuth();
   const router = useRouter();
+  const propertyService = getPropertyService();
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
@@ -112,7 +113,7 @@ export function CreatePropertyForm() {
     setError(null);
 
     try {
-      const property = await mockProperties.createProperty(
+      const property = await propertyService.createProperty(
         {
           ...values,
           location: {

@@ -10,7 +10,7 @@ Este proyecto es una aplicación de reservas vacacionales inspirada en Airbnb, c
 2. **Modularidad**: Cada funcionalidad está organizada en su propio módulo
 3. **Escalabilidad**: Estructura preparada para crecer
 4. **Mantenibilidad**: Código organizado y documentado
-5. **Flexibilidad**: Fácil cambio entre MOCK y API real
+5. **Flexibilidad**: Servicios por módulo y contratos estables
 
 ## 📁 Estructura de Carpetas
 
@@ -58,23 +58,23 @@ Fronted_airbnb/
 
 ### Autenticación
 ```
-Usuario → LoginForm → mockAuth.login() → localStorage → AuthContext → UI actualizada
+Usuario → LoginForm → AuthContext → AuthService (API) → AuthContext → UI actualizada
 ```
 
 ### Propiedades
 ```
-Usuario → PropertyCard → mockProperties.getPropertyById() → localStorage → Componente renderizado
+Usuario → PropertyCard → PropertyService (API) → Componente renderizado
 ```
 
 ### Reservas
 ```
-Usuario → BookingForm → mockBookings.createBooking() → Validación → localStorage → Notificación
+Usuario → BookingForm → BookingService (API) → Notificación
 ```
 
 ## 🏛️ Patrones Arquitectónicos
 
 ### 1. Service Layer Pattern
-Todos los servicios están abstraídos mediante interfaces (`lib/api/interfaces.ts`), permitiendo cambiar entre MOCK y API real sin modificar componentes.
+Todos los servicios están abstraídos mediante interfaces (`lib/api/interfaces.ts`) para que la UI sea estable.
 
 ```typescript
 // Uso en componentes
@@ -97,25 +97,15 @@ import { PropertyCard, PropertyGrid } from '@/components/properties';
 `service-factory.ts` crea instancias de servicios según configuración:
 ```typescript
 export function getPropertyService(): IPropertyService {
-  if (useMockServices()) {
-    return mockProperties;
-  }
-  return propertyService; // API real
+  return propertyService;
 }
 ```
 
 ## 🔌 Integración con Backend
 
-### Estado Actual: MOCK
-- Todos los datos se almacenan en `localStorage`
-- Servicios MOCK en `lib/*/mock-*.ts`
-- Sin dependencia de backend
-
-### Migración a API Real
-1. Configurar `NEXT_PUBLIC_API_URL`
-2. Establecer `NEXT_PUBLIC_USE_MOCK_SERVICES=false`
-3. Implementar servicios en `lib/api/services/`
-4. El factory automáticamente usará servicios reales
+### Estado Actual: API real
+1. Configurar `NEXT_PUBLIC_API_URL` (por ejemplo `http://localhost:3333/api`)
+2. Consumir endpoints mediante `lib/api/services/*`
 
 ### Cliente API
 `lib/api/client.ts` proporciona:
@@ -144,7 +134,7 @@ Basado en [shadcn/ui](https://ui.shadcn.com/):
 
 ### Global State
 - `AuthContext` para autenticación
-- `localStorage` para persistencia (MOCK)
+- `localStorage` para persistencia (ej: token)
 
 ### Server State (Futuro)
 Cuando se integre con API real:
@@ -159,7 +149,7 @@ Cuando se integre con API real:
 - Protección de rutas (redirección si no autenticado)
 
 ### Autenticación
-- Tokens almacenados en `localStorage` (MOCK)
+- Tokens almacenados en `localStorage`
 - En producción: tokens en httpOnly cookies
 - Validación de permisos en rutas protegidas
 

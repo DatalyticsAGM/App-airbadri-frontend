@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PropertyGrid } from '@/components/properties';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2 } from 'lucide-react';
@@ -23,6 +23,7 @@ export default function MyPropertiesPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -34,7 +35,7 @@ export default function MyPropertiesPage() {
       if (!user) return;
 
       try {
-        const userProperties = await mockProperties.getPropertiesByHost(user.id);
+        const userProperties = await propertyService.getPropertiesByHost(user.id);
         setProperties(userProperties);
       } catch (error) {
         console.error('Error cargando propiedades:', error);
@@ -54,7 +55,7 @@ export default function MyPropertiesPage() {
     }
 
     try {
-      await mockProperties.deleteProperty(id);
+      await propertyService.deleteProperty(id);
       setProperties(properties.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error eliminando propiedad:', error);

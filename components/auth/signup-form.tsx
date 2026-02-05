@@ -6,7 +6,7 @@
  * Características:
  * - Validación de todos los campos
  * - Validación de coincidencia de contraseñas
- * - Manejo de errores del servidor (MOCK)
+ * - Manejo de errores del servidor
  * - Estados de carga durante el submit
  * - Redirección automática después del registro exitoso
  */

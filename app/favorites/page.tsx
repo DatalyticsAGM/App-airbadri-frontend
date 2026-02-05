@@ -12,8 +12,8 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PropertyGrid } from '@/components/properties';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockFavorites } from '@/lib/favorites/mock-favorites';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { favoritesService } from '@/lib/favorites/favorites-service';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 import { Heart } from 'lucide-react';
 
@@ -22,6 +22,7 @@ export default function FavoritesPage() {
   const router = useRouter();
   const [favoriteProperties, setFavoriteProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -39,7 +40,7 @@ export default function FavoritesPage() {
 
     setLoading(true);
     try {
-      const favoriteIds = await mockFavorites.getFavoritePropertyIds(user.id);
+      const favoriteIds = await favoritesService.getFavoritePropertyIds(user.id);
       
       if (favoriteIds.length === 0) {
         setFavoriteProperties([]);
@@ -48,7 +49,7 @@ export default function FavoritesPage() {
 
       // Cargar propiedades favoritas
       const properties = await Promise.all(
-        favoriteIds.map(id => mockProperties.getPropertyById(id))
+        favoriteIds.map((id) => propertyService.getPropertyById(id))
       );
 
       setFavoriteProperties(properties.filter((p): p is Property => p !== null));

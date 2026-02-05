@@ -6,30 +6,66 @@
  * Ruta: /auth/reset-password?token=...
  */
 
-import { Suspense } from 'react';
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ResetPasswordForm } from '@/components/auth';
 import { Home } from 'lucide-react';
+import { useAuth } from '@/lib/auth/auth-context';
 
 function ResetPasswordContent() {
-  // En Next.js 13 App Router, necesitamos usar searchParams del cliente
-  // Para simplificar, usaremos una versión que lee del query string
-  if (typeof window === 'undefined') {
+  const searchParams = useSearchParams();
+  const { validateResetToken } = useAuth();
+
+  const token = useMemo(() => searchParams.get('token'), [searchParams]);
+
+  const [validating, setValidating] = useState(true);
+  const [isValid, setIsValid] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      setError(null);
+
+      if (!token) {
+        setValidating(false);
+        setIsValid(false);
+        return;
+      }
+
+      setValidating(true);
+      const result = await validateResetToken(token);
+
+      if (cancelled) return;
+
+      setIsValid(result.valid);
+      setError(result.valid ? null : (result.message || 'Token no válido o expirado'));
+      setValidating(false);
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, validateResetToken]);
+
+  if (validating) {
     return (
-      <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-        Cargando...
+      <div className="p-3 text-sm text-airbnb-text-200 bg-airbnb-bg-200 border border-airbnb-bg-300 rounded-md">
+        Validando token...
       </div>
     );
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
-
-  if (!token) {
+  if (!token || !isValid) {
     return (
       <>
         <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md mb-4">
-          Token no válido. Por favor, solicita un nuevo enlace de recuperación.
+          {error || 'Token no válido. Por favor, solicita un nuevo enlace de recuperación.'}
         </div>
         <div className="text-center">
           <Link
@@ -74,9 +110,7 @@ export default function ResetPasswordPage() {
               </p>
             </div>
 
-            <Suspense fallback={<div>Cargando...</div>}>
-              <ResetPasswordContent />
-            </Suspense>
+            <ResetPasswordContent />
 
             <div className="mt-6 text-center">
               <p className="text-sm text-airbnb-text-200">

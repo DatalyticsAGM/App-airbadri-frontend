@@ -4,7 +4,7 @@ Esta documentación describe los endpoints esperados del backend para integrar c
 
 ## 🔐 Autenticación
 
-### POST /auth/signup
+### POST /auth/register
 Registra un nuevo usuario.
 
 **Request:**

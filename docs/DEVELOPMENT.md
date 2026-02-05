@@ -78,7 +78,7 @@ Orden recomendado:
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 ```
 
@@ -91,19 +91,17 @@ import type { Property } from '@/lib/properties/types';
 lib/
   └── new-module/
       ├── types.ts           # Tipos TypeScript
-      ├── mock-new-module.ts # Servicio MOCK
-      ├── mock-data.ts       # Datos de ejemplo
+      ├── new-module-service.ts # Servicio del módulo
       └── __tests__/         # Tests
-          └── mock-new-module.test.ts
+          └── new-module.test.ts
 ```
 
 **Pasos:**
 1. Crear tipos en `types.ts`
-2. Implementar servicio MOCK
-3. Crear datos de ejemplo
-4. Agregar tests
-5. Implementar interface en `lib/api/interfaces.ts`
-6. Agregar al factory en `lib/api/service-factory.ts`
+2. Implementar el servicio (idealmente en `lib/api/services/` si consume backend)
+3. Agregar tests
+4. Implementar interface en `lib/api/interfaces.ts`
+5. Agregar al factory en `lib/api/service-factory.ts`
 
 ### 2. Crear Componentes
 
@@ -173,40 +171,11 @@ npm run test:coverage # Con cobertura
 - Componentes críticos: >80%
 - General: >80%
 
-## 🔄 Migración de MOCK a API Real
+## 🔌 Integración con API
 
-### Paso 1: Configurar Variables de Entorno
-```bash
-NEXT_PUBLIC_API_URL=https://api.example.com
-NEXT_PUBLIC_USE_MOCK_SERVICES=false
-```
-
-### Paso 2: Implementar Servicio Real
-En `lib/api/services/new-module-service.ts`:
-
-```typescript
-import { apiClient } from '../client';
-import type { INewModuleService } from '../interfaces';
-
-export const newModuleService: INewModuleService = {
-  async getAll() {
-    return apiClient.get('/new-module');
-  },
-  // ... más métodos
-};
-```
-
-### Paso 3: Actualizar Factory
-En `lib/api/service-factory.ts`:
-
-```typescript
-export function getNewModuleService(): INewModuleService {
-  if (useMockServices()) {
-    return mockNewModule;
-  }
-  return newModuleService; // API real
-}
-```
+1. Configurar `NEXT_PUBLIC_API_URL` (por ejemplo `http://localhost:3333/api`)
+2. Implementar el servicio en `lib/api/services/`
+3. Exponerlo en `lib/api/service-factory.ts`
 
 ## 🐛 Debugging
 
@@ -260,7 +229,7 @@ El proyecto está configurado para:
 
 **Variables de entorno en producción:**
 - Configurar todas las variables necesarias
-- No usar servicios MOCK en producción (a menos que sea intencional)
+- Asegurar `NEXT_PUBLIC_API_URL`
 
 ## 🔍 Code Review Checklist
 

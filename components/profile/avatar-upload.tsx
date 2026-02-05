@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { mockAuth } from '@/lib/auth/mock-auth';
+import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 type AvatarUploadProps = Record<string, never>;
@@ -111,9 +111,9 @@ export const AvatarUpload = (): JSX.Element | null => {
 
     setIsUploading(true);
     try {
-      // En un sistema real, aquí subirías la imagen a un servicio de almacenamiento
-      // Por ahora, guardamos la URL/data URL en localStorage
-      await mockAuth.updateProfile({ avatar: avatarUrl });
+      // Implementación mínima (API real):
+      // asumimos un endpoint de perfil. Si tu backend usa otro, cambia este endpoint aquí.
+      await apiClient.patch('/auth/me', { avatar: avatarUrl });
       
       // Refrescar el usuario en el contexto
       if (refreshUser) {
@@ -139,7 +139,7 @@ export const AvatarUpload = (): JSX.Element | null => {
   const handleRemove = async (): Promise<void> => {
     setIsUploading(true);
     try {
-      await mockAuth.updateProfile({ avatar: '' });
+      await apiClient.patch('/auth/me', { avatar: '' });
       
       if (refreshUser) {
         await refreshUser();

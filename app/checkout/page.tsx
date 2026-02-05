@@ -15,8 +15,8 @@ import { PropertySummary, PricingBreakdownComponent, UserInfoSection } from '@/c
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { getCheckoutData, validateCheckoutData, clearCheckoutTemp } from '@/lib/checkout/mock-checkout';
-import { mockBookings } from '@/lib/bookings/mock-bookings';
+import { getCheckoutData, validateCheckoutData, clearCheckoutTemp } from '@/lib/checkout/checkout-service';
+import { getBookingService } from '@/lib/api/service-factory';
 import { useToast } from '@/hooks/use-toast';
 import type { CheckoutData, CheckoutFormData } from '@/lib/checkout/types';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const bookingService = getBookingService();
   
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
   const [formData, setFormData] = useState<CheckoutFormData | null>(null);
@@ -66,7 +67,7 @@ export default function CheckoutPage() {
         // Pre-llenar formulario con datos del usuario solo una vez
         if (user) {
           setFormData({
-            fullName: user.name || '',
+            fullName: user.fullName || '',
             email: user.email || '',
             phone: '',
           });
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
   /**
    * Maneja la confirmación de la reserva
    * 
-   * Esta función valida todos los datos, crea la reserva usando el servicio MOCK
+   * Esta función valida todos los datos y crea la reserva usando la API real
    * y redirige al usuario a la página de detalle de reserva.
    */
   const handleConfirmBooking = async () => {
@@ -112,8 +113,8 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      // Crear la reserva usando el servicio MOCK
-      const booking = await mockBookings.createBooking(
+      // Crear la reserva usando la API real
+      const booking = await bookingService.createBooking(
         {
           propertyId: checkoutData.property.id,
           checkIn: checkoutData.checkIn,

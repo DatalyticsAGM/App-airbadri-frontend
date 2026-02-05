@@ -77,17 +77,22 @@ project/
 │   └── ui/                     # Componentes de shadcn/ui
 ├── lib/
 │   ├── auth/                   # Servicios y contexto de autenticación
-│   │   ├── mock-auth.ts
 │   │   ├── auth-context.tsx
-│   │   └── mock-users-data.ts
+│   │   └── types.ts
 │   ├── properties/             # Servicios y tipos de propiedades
 │   │   ├── types.ts
-│   │   ├── mock-properties.ts
-│   │   └── mock-data.ts
 │   ├── bookings/               # Servicios y tipos de reservas
 │   │   ├── types.ts
-│   │   ├── mock-bookings.ts
-│   │   └── mock-data.ts
+│   ├── api/                    # Cliente y servicios HTTP (API real)
+│   │   ├── client.ts
+│   │   ├── interfaces.ts
+│   │   ├── service-factory.ts
+│   │   └── services/
+│   │       ├── auth-service.ts
+│   │       ├── property-service.ts
+│   │       ├── booking-service.ts
+│   │       ├── review-service.ts
+│   │       └── notification-service.ts
 │   └── utils.ts                # Utilidades compartidas
 └── hooks/                      # Custom hooks
     └── use-toast.ts
@@ -102,38 +107,8 @@ project/
 
 ## ✅ Estado del Proyecto
 
-### Milestone 1: Módulo de Autenticación (Auth) - MOCK ✅
-- Sistema completo de autenticación con localStorage
-- Login, registro, recuperación y reset de contraseña
-- Integración con header y navegación
-
-### Milestone 2: Módulo de Propiedades y Reservas (MOCK) ✅
-- CRUD completo de propiedades
-- Sistema de reservas con validación de disponibilidad
-- Filtros y búsqueda de propiedades
-- Perfil de usuario con estadísticas
-
-### Milestone 2.1: Refactorización de Estructura de Componentes ✅
-- Organización por módulos funcionales
-- Barrel exports para imports limpios
-- Estructura consistente y escalable
-
-### Milestone 3: Mejoras de UX/UI, SEO y Features Adicionales ✅
-- Sistema de reviews y ratings
-- Búsqueda avanzada
-- Optimización SEO (metadata, sitemap, robots.txt)
-- Skeleton loaders
-- Sistema de notificaciones
-- Dashboard de host
-- Sistema de favoritos
-- Compartir propiedades
-
-### Milestone 4: Testing, Optimización y Preparación para Producción ✅
-- Configuración de testing (Jest, Testing Library)
-- Tests unitarios para servicios MOCK
-- Preparación para backend real (abstracciones e interfaces)
-- Variables de entorno y configuración
-- Documentación completa
+El frontend está preparado para consumir **API real** mediante `lib/api/client.ts`
+y servicios por módulo en `lib/api/services/`.
 
 ## 🚀 Stack Tecnológico
 
@@ -176,19 +151,12 @@ npm run lint          # Ejecutar ESLint
 
 ### Variables de Entorno
 
-Copia `.env.example` a `.env.local` y configura las variables necesarias:
-
-```bash
-cp .env.example .env.local
-```
-
 Variables principales:
-- `NEXT_PUBLIC_API_URL`: URL del backend (opcional, por defecto usa MOCK)
-- `NEXT_PUBLIC_USE_MOCK_SERVICES`: `true` para usar servicios MOCK (por defecto)
+- `NEXT_PUBLIC_API_URL`: URL del backend (requerida en producción)
 - `NEXT_PUBLIC_APP_NAME`: Nombre de la aplicación
 - `NEXT_PUBLIC_APP_URL`: URL pública de la aplicación
 
-Ver `.env.example` para todas las opciones disponibles.
+Puedes definirlas en `.env` o `.env.local`.
 
 ## 📚 Documentación
 
@@ -207,23 +175,18 @@ npm run test:coverage # Con cobertura
 ```
 
 Los tests cubren:
-- Servicios MOCK (auth, properties, bookings)
+- Servicios (auth, properties, bookings)
 - Utilidades
 - Componentes (en desarrollo)
 
-## 🔄 Migración a Backend Real
+## 🔄 Conexión a Backend
 
-El proyecto está preparado para migrar fácilmente de servicios MOCK a API real:
-
-1. Configura `NEXT_PUBLIC_API_URL` en `.env.local`
-2. Establece `NEXT_PUBLIC_USE_MOCK_SERVICES=false`
-3. Implementa los servicios en `lib/api/services/` según las interfaces definidas
-
-Ver [docs/API.md](./docs/API.md) para la documentación de endpoints esperados.
+1. Configura `NEXT_PUBLIC_API_URL` (por ejemplo `http://localhost:3333/api`)
+2. Asegura que los endpoints estén alineados con [docs/API.md](./docs/API.md)
+3. Los módulos consumen la API vía `lib/api/services/*`
 
 ## 📝 Notas Adicionales
 
-- **Sistema MOCK**: Actualmente usa localStorage para almacenamiento (solo desarrollo)
 - **Imágenes**: Todas las imágenes son de Pexels (uso permitido)
 - **Responsive**: Diseño optimizado para mobile, tablet y desktop
 - **Accesibilidad**: Se respetan las preferencias de movimiento reducido

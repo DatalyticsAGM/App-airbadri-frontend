@@ -13,7 +13,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PropertyDetail } from '@/components/properties';
 import { BookingForm } from '@/components/bookings';
-import { mockProperties } from '@/lib/properties/mock-properties';
+import { getPropertyService } from '@/lib/api/service-factory';
 import type { Property } from '@/lib/properties/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -24,12 +24,13 @@ export function PropertyDetailPageClient() {
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const propertyService = getPropertyService();
 
   useEffect(() => {
     const loadProperty = async () => {
       try {
         const id = params.id as string;
-        const prop = await mockProperties.getPropertyById(id);
+        const prop = await propertyService.getPropertyById(id);
         if (!prop) {
           router.push('/properties');
           return;
