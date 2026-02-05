@@ -3,6 +3,10 @@
  * 
  * Componente para cambiar la foto de perfil del usuario.
  * Permite subir una imagen desde el dispositivo o usar una URL.
+ * 
+ * Por qué existe: Proporciona una interfaz accesible y fácil de usar
+ * para que los usuarios puedan actualizar su foto de perfil mediante
+ * carga de archivo o URL, con validación y preview en tiempo real.
  */
 
 'use client';
@@ -25,17 +29,21 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { mockAuth } from '@/lib/auth/mock-auth';
 import { toast } from 'sonner';
 
-export function AvatarUpload() {
+type AvatarUploadProps = Record<string, never>;
+
+export const AvatarUpload = (): JSX.Element | null => {
   const { user, refreshUser } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '');
-  const [isUploading, setIsUploading] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar || '');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) return null;
 
-  // Obtener iniciales para el fallback
+  // Obtener iniciales para el fallback del avatar
+  // Por qué: Muestra las iniciales del usuario cuando no hay imagen,
+  // mejorando la experiencia visual y la identificación del usuario
   const initials = user.fullName
     .split(' ')
     .map((n) => n[0])
@@ -44,9 +52,11 @@ export function AvatarUpload() {
     .slice(0, 2);
 
   /**
-   * Maneja la selección de archivo
+   * Maneja la selección de archivo desde el dispositivo
+   * Por qué: Valida el tipo y tamaño del archivo antes de procesarlo,
+   * mostrando errores claros al usuario y creando un preview inmediato
    */
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -72,22 +82,28 @@ export function AvatarUpload() {
   };
 
   /**
-   * Maneja la carga de la imagen desde URL
+   * Maneja el cambio de URL de imagen
+   * Por qué: Permite a los usuarios usar una URL externa como avatar,
+   * actualizando el preview en tiempo real para que vean el resultado antes de guardar
    */
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const url = e.target.value;
     setAvatarUrl(url);
-    if (url) {
-      setPreview(url);
-    } else {
+    
+    if (!url) {
       setPreview(null);
+      return;
     }
+    
+    setPreview(url);
   };
 
   /**
-   * Guarda el nuevo avatar
+   * Guarda el nuevo avatar en el perfil del usuario
+   * Por qué: Actualiza el avatar del usuario en el sistema y refresca
+   * el contexto de autenticación para que los cambios se reflejen inmediatamente
    */
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     if (!avatarUrl.trim()) {
       toast.error('Por favor proporciona una imagen o URL');
       return;
@@ -116,9 +132,11 @@ export function AvatarUpload() {
   };
 
   /**
-   * Elimina el avatar actual
+   * Elimina el avatar actual del perfil del usuario
+   * Por qué: Permite al usuario remover su foto de perfil y volver
+   * al estado inicial con solo las iniciales mostradas
    */
-  const handleRemove = async () => {
+  const handleRemove = async (): Promise<void> => {
     setIsUploading(true);
     try {
       await mockAuth.updateProfile({ avatar: '' });
@@ -188,15 +206,23 @@ export function AvatarUpload() {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full gap-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  Seleccionar archivo
-                </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                className="w-full gap-2"
+                aria-label="Seleccionar archivo de imagen"
+                tabIndex={0}
+              >
+                <Upload className="w-4 h-4" />
+                Seleccionar archivo
+              </Button>
               </div>
             </div>
 
@@ -221,8 +247,18 @@ export function AvatarUpload() {
                   setAvatarUrl(user.avatar || '');
                   setPreview(null);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    setAvatarUrl(user.avatar || '');
+                    setPreview(null);
+                  }
+                }}
                 className="flex-1"
                 disabled={isUploading}
+                aria-label="Cancelar cambio de foto de perfil"
+                tabIndex={0}
               >
                 Cancelar
               </Button>
@@ -230,8 +266,16 @@ export function AvatarUpload() {
                 <Button
                   variant="destructive"
                   onClick={handleRemove}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleRemove();
+                    }
+                  }}
                   disabled={isUploading}
                   className="gap-2"
+                  aria-label="Eliminar foto de perfil actual"
+                  tabIndex={0}
                 >
                   {isUploading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -243,8 +287,16 @@ export function AvatarUpload() {
               )}
               <Button
                 onClick={handleSave}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && !isUploading && avatarUrl.trim()) {
+                    e.preventDefault();
+                    handleSave();
+                  }
+                }}
                 disabled={isUploading || !avatarUrl.trim()}
                 className="flex-1 bg-airbnb-primary-100 hover:bg-airbnb-primary-100/90"
+                aria-label="Guardar nueva foto de perfil"
+                tabIndex={0}
               >
                 {isUploading ? (
                   <>
@@ -261,11 +313,4 @@ export function AvatarUpload() {
       </Dialog>
     </div>
   );
-}
-
-
-
-
-
-
-
+};

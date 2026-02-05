@@ -19,7 +19,7 @@ export default function LoginPage() {
           <div className="flex justify-between items-center h-20">
             <Link href="/" className="flex items-center gap-2">
               <Home className="w-8 h-8 text-airbnb-primary-100" strokeWidth={2.5} />
-              <span className="text-2xl font-bold text-airbnb-primary-100">airbnb</span>
+              <span className="text-2xl font-bold text-airbnb-primary-100">Adribnb</span>
             </Link>
           </div>
         </div>
