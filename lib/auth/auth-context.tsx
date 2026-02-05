@@ -19,6 +19,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User, ResetPasswordResponse, ValidateResetTokenResponse } from './types';
 import { getAuthService } from '@/lib/api/service-factory';
+import { hasAuthToken, clearAuthToken } from './auth-utils';
 
 /**
  * Tipo del contexto de autenticación
@@ -60,13 +61,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Carga el usuario actual de la sesión
+   * 
+   * Solo hace la llamada al API si hay un token almacenado.
+   * Esto evita errores 401 innecesarios en rutas públicas.
    */
   const loadUser = async () => {
     try {
+      // ✅ Verificar si hay token antes de llamar al API
+      if (!hasAuthToken()) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Solo hacer la llamada si hay token
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
-      console.error('Error cargando usuario:', error);
+      // Si falla (ej: token expirado), limpiar usuario
+      // No mostrar error en consola porque es esperado en algunas situaciones
       setUser(null);
     } finally {
       setLoading(false);
@@ -75,6 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Inicia sesión con email y contraseña
+   * 
+   * Asegura que el usuario esté completamente cargado antes de retornar éxito.
    */
   const login = async (email: string, password: string) => {
     try {
@@ -84,8 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.user) {
           setUser(response.user);
         } else {
+          // Esperar a que el usuario se cargue completamente
           await refreshUser();
         }
+        
+        // Pequeña espera para asegurar que el estado se actualizó
+        // Esto evita race conditions en la redirección
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         return { success: true };
       }
       return { success: false, error: response.error || 'Credenciales inválidas' };
@@ -122,9 +143,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authService.logout();
+      clearAuthToken(); // Limpiar token de todos los storages
       setUser(null);
     } catch (error) {
       console.error('Error en logout:', error);
+      // Aunque falle, limpiar token localmente
+      clearAuthToken();
+      setUser(null);
     }
   };
 

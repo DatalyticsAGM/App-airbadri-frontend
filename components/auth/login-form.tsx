@@ -64,9 +64,10 @@ export function LoginForm() {
       const result = await login(values.email, values.password);
       
       if (result.success) {
-        // Redireccionar a la página principal
-        router.push('/');
-        router.refresh();
+        // Redireccionar al dashboard del host usando replace
+        // replace() reemplaza la entrada del historial en lugar de agregar una nueva
+        // Esto ayuda a evitar bucles de navegación
+        router.replace('/host/dashboard');
       } else {
         // Mostrar error del servidor
         setError(result.error || 'Error al iniciar sesión');

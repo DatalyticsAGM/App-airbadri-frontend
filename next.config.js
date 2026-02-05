@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // output: 'export', // Removido - no compatible con autenticación y API dinámica
   eslint: {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
-  // Permitir rutas dinámicas en modo estático
   trailingSlash: true,
 };
 

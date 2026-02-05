@@ -50,48 +50,79 @@ export default function HostDashboardPage() {
     setLoading(true);
     try {
       // Cargar propiedades del host
-      const hostPropertiesRaw = await propertyService.getPropertiesByHost(user.id);
-      const hostProperties = Array.isArray(hostPropertiesRaw) ? hostPropertiesRaw : [];
-      setProperties(hostProperties);
-
-      // Calcular estadísticas
-      let totalBookings = 0;
-      let totalRevenue = 0;
-      let totalRating = 0;
-      let ratingCount = 0;
-      let upcomingCount = 0;
-
-      for (const property of hostProperties) {
-        const bookings = await bookingService.getBookingsByProperty(property.id);
-        totalBookings += bookings.length;
-
-        bookings.forEach((booking) => {
-          totalRevenue += booking.totalPrice;
-          const checkIn = new Date(booking.checkIn);
-          if (checkIn > new Date()) {
-            upcomingCount++;
-          }
-        });
-
-        const reviews = await reviewService.getReviewsByProperty(property.id);
-        const count = reviews.length;
-        const average = count
-          ? reviews.reduce((acc, r) => acc + (r.rating?.overall || 0), 0) / count
-          : 0;
-
-        if (count > 0) {
-          totalRating += average;
-          ratingCount++;
-        }
+      let hostProperties: Property[] = [];
+      try {
+        const hostPropertiesRaw = await propertyService.getPropertiesByHost(user.id);
+        hostProperties = Array.isArray(hostPropertiesRaw) ? hostPropertiesRaw : [];
+        setProperties(hostProperties);
+      } catch (error) {
+        // Si falla la carga de propiedades, continuar con array vacío
+        // Esto permite que el dashboard se muestre aunque el endpoint no exista
+        console.warn('No se pudieron cargar las propiedades del host:', error);
+        setProperties([]);
       }
 
-      setStats({
-        totalProperties: hostProperties.length,
-        totalBookings,
-        totalRevenue,
-        averageRating: ratingCount > 0 ? totalRating / ratingCount : 0,
-        upcomingBookings: upcomingCount,
-      });
+      // Calcular estadísticas solo si hay propiedades
+      if (hostProperties.length > 0) {
+        let totalBookings = 0;
+        let totalRevenue = 0;
+        let totalRating = 0;
+        let ratingCount = 0;
+        let upcomingCount = 0;
+
+        for (const property of hostProperties) {
+          // Intentar cargar bookings de cada propiedad
+          try {
+            const bookings = await bookingService.getBookingsByProperty(property.id);
+            totalBookings += bookings.length;
+
+            bookings.forEach((booking) => {
+              totalRevenue += booking.totalPrice;
+              const checkIn = new Date(booking.checkIn);
+              if (checkIn > new Date()) {
+                upcomingCount++;
+              }
+            });
+          } catch (error) {
+            // Si falla una propiedad, continuar con las demás
+            console.warn(`No se pudieron cargar reservas de propiedad ${property.id}`);
+          }
+
+          // Intentar cargar reviews de cada propiedad
+          try {
+            const reviews = await reviewService.getReviewsByProperty(property.id);
+            const count = reviews.length;
+            const average = count
+              ? reviews.reduce((acc, r) => acc + (r.rating?.overall || 0), 0) / count
+              : 0;
+
+            if (count > 0) {
+              totalRating += average;
+              ratingCount++;
+            }
+          } catch (error) {
+            // Si falla una propiedad, continuar con las demás
+            console.warn(`No se pudieron cargar reviews de propiedad ${property.id}`);
+          }
+        }
+
+        setStats({
+          totalProperties: hostProperties.length,
+          totalBookings,
+          totalRevenue,
+          averageRating: ratingCount > 0 ? totalRating / ratingCount : 0,
+          upcomingBookings: upcomingCount,
+        });
+      } else {
+        // Dashboard vacío pero sin errores
+        setStats({
+          totalProperties: 0,
+          totalBookings: 0,
+          totalRevenue: 0,
+          averageRating: 0,
+          upcomingBookings: 0,
+        });
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
