@@ -1,57 +1,52 @@
 /**
- * Autocomplete Service (Client-side)
+ * Autocomplete Service (API Real)
  *
- * Por qué existe: entregar sugerencias simples para la barra de búsqueda.
- * Esta versión usa datos locales (constantes) + propiedades desde API.
+ * Por qué existe: entregar sugerencias para la barra de búsqueda basadas en datos reales
+ * del backend (propiedades y ubicaciones). Evitamos datos hardcodeados para no simular
+ * resultados que no existen en producción.
  */
 
 import type { SearchSuggestion, PopularSearch } from './types';
 import { getPropertyService } from '@/lib/api/service-factory';
 
-const NETWORK_DELAY = 200;
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function normalizeText(text: string): string {
+  return text.toLowerCase().trim();
 }
 
-const POPULAR_LOCATIONS = [
-  { city: 'Barcelona', country: 'España' },
-  { city: 'Madrid', country: 'España' },
-  { city: 'Valencia', country: 'España' },
-  { city: 'Sevilla', country: 'España' },
-  { city: 'Bilbao', country: 'España' },
-  { city: 'Málaga', country: 'España' },
-  { city: 'Granada', country: 'España' },
-  { city: 'Santiago de Compostela', country: 'España' },
-  { city: 'Palma de Mallorca', country: 'España' },
-  { city: 'San Sebastián', country: 'España' },
-];
-
-const POPULAR_SEARCHES_DATA: PopularSearch[] = [
-  { id: '1', text: 'Apartamentos en Barcelona', location: 'Barcelona, España', count: 1250 },
-  { id: '2', text: 'Casas con piscina', location: 'España', count: 890 },
-  { id: '3', text: 'Apartamentos cerca de la playa', location: 'Costa', count: 750 },
-  { id: '4', text: 'Lofts en Madrid', location: 'Madrid, España', count: 620 },
-  { id: '5', text: 'Villas con jardín', location: 'España', count: 540 },
-];
+async function getAllPropertiesSafe() {
+  try {
+    return await getPropertyService().getAllProperties();
+  } catch (error) {
+    console.error('Error obteniendo propiedades para autocomplete:', error);
+    return [];
+  }
+}
 
 async function getLocationSuggestions(text: string): Promise<SearchSuggestion[]> {
-  await delay(NETWORK_DELAY);
   if (!text || text.trim().length < 2) return [];
 
-  const textLower = text.toLowerCase().trim();
+  const textLower = normalizeText(text);
+  const properties = await getAllPropertiesSafe();
+
+  // Deduplicar ubicaciones reales desde propiedades
+  const seen = new Set<string>();
   const suggestions: SearchSuggestion[] = [];
 
-  for (const location of POPULAR_LOCATIONS) {
-    if (
-      location.city.toLowerCase().includes(textLower) ||
-      location.country.toLowerCase().includes(textLower)
-    ) {
+  for (const property of properties) {
+    const city = property.location?.city ?? '';
+    const country = property.location?.country ?? '';
+    const key = `${city}|${country}`.toLowerCase();
+
+    if (!city) continue;
+    if (seen.has(key)) continue;
+
+    if (normalizeText(city).includes(textLower) || normalizeText(country).includes(textLower)) {
+      seen.add(key);
       suggestions.push({
-        id: `location_${location.city}`,
+        id: `location_${key}`,
         type: 'location',
-        text: location.city,
-        subtitle: location.country,
+        text: city,
+        subtitle: country,
       });
     }
   }
@@ -60,42 +55,63 @@ async function getLocationSuggestions(text: string): Promise<SearchSuggestion[]>
 }
 
 async function getPropertySuggestions(text: string): Promise<SearchSuggestion[]> {
-  await delay(NETWORK_DELAY);
   if (!text || text.trim().length < 2) return [];
 
-  try {
-    const properties = await getPropertyService().getAllProperties();
-    const textLower = text.toLowerCase().trim();
-    const suggestions: SearchSuggestion[] = [];
+  const properties = await getAllPropertiesSafe();
+  const textLower = normalizeText(text);
+  const suggestions: SearchSuggestion[] = [];
 
-    for (const property of properties) {
-      const titleMatch = property.title.toLowerCase().includes(textLower);
-      const descMatch = property.description.toLowerCase().includes(textLower);
-      const locationMatch =
-        property.location.city.toLowerCase().includes(textLower) ||
-        property.location.country.toLowerCase().includes(textLower);
+  for (const property of properties) {
+    const titleMatch = normalizeText(property.title).includes(textLower);
+    const descMatch = normalizeText(property.description).includes(textLower);
+    const locationMatch =
+      normalizeText(property.location?.city ?? '').includes(textLower) ||
+      normalizeText(property.location?.country ?? '').includes(textLower);
 
-      if (titleMatch || descMatch || locationMatch) {
-        suggestions.push({
-          id: `property_${property.id}`,
-          type: 'property',
-          text: property.title,
-          subtitle: `${property.location.city}, ${property.location.country}`,
-          propertyId: property.id,
-        });
-      }
+    if (titleMatch || descMatch || locationMatch) {
+      suggestions.push({
+        id: `property_${property.id}`,
+        type: 'property',
+        text: property.title,
+        subtitle: `${property.location?.city ?? ''}, ${property.location?.country ?? ''}`.trim(),
+        propertyId: property.id,
+      });
     }
-
-    return suggestions.slice(0, 5);
-  } catch (error) {
-    console.error('Error obteniendo sugerencias de propiedades:', error);
-    return [];
   }
+
+  return suggestions.slice(0, 5);
 }
 
 async function getPopularSearches(): Promise<SearchSuggestion[]> {
-  await delay(NETWORK_DELAY);
-  return POPULAR_SEARCHES_DATA.map((search) => ({
+  const properties = await getAllPropertiesSafe();
+
+  // Top ubicaciones por cantidad de propiedades
+  const counts = new Map<string, { city: string; country: string; count: number }>();
+  for (const p of properties) {
+    const city = p.location?.city ?? '';
+    const country = p.location?.country ?? '';
+    if (!city) continue;
+
+    const key = `${city}|${country}`.toLowerCase();
+    const existing = counts.get(key);
+    counts.set(key, {
+      city,
+      country,
+      count: (existing?.count ?? 0) + 1,
+    });
+  }
+
+  const popular: PopularSearch[] = Array.from(counts.entries())
+    .map(([id, v]) => ({
+      id,
+      text: `Alojamientos en ${v.city}`,
+      location: v.country ? `${v.city}, ${v.country}` : v.city,
+      count: v.count,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  return popular.map((search) => ({
     id: search.id,
     type: 'popular',
     text: search.text,

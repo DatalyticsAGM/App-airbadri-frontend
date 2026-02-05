@@ -19,6 +19,11 @@ export interface IAuthService {
   login(email: string, password: string): Promise<AuthResponse>;
   logout(): Promise<void>;
   getCurrentUser(): Promise<User | null>;
+  /**
+   * Actualiza el perfil del usuario autenticado (ej: avatar).
+   * Por qué existe: evita llamadas HTTP directas desde componentes.
+   */
+  updateProfile(data: Partial<Pick<User, 'avatar' | 'fullName'>>): Promise<User | null>;
   isAuthenticated(): boolean;
   forgotPassword(email: string): Promise<ResetPasswordResponse>;
   resetPassword(token: string, password: string): Promise<ResetPasswordResponse>;

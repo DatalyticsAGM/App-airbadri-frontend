@@ -117,6 +117,12 @@ export function AuthButton() {
               Mis Favoritos
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/auth/change-password" className="flex items-center cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              Cambiar contraseña
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={handleLogout}

@@ -22,6 +22,7 @@ import { Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AuthButton } from '@/components/auth/auth-button';
+import { SearchInput } from '@/components/search';
 
 // Array de enlaces de navegación
 // Esto facilita agregar o modificar enlaces en el futuro
@@ -77,37 +78,41 @@ export function Header() {
 
           {/* Enlaces de navegación principal */}
           {/* role="navigation" ayuda a los lectores de pantalla a identificar esta sección */}
-          <nav 
-            className="hidden md:flex items-center gap-8"
-            role="navigation"
-            aria-label="Navegación principal"
-          >
-            {/* Recorremos el array de enlaces y creamos un Link para cada uno */}
-            {navigationLinks.map((link) => {
-              // Verificamos si la ruta actual coincide con el enlace
-              // Esto nos permite resaltar el enlace de la página actual
-              const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
-              
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`transition-colors font-medium ${
-                    isActive
-                      ? 'text-airbnb-primary-100'
-                      : 'text-airbnb-text-200 hover:text-airbnb-primary-100'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="flex items-center gap-3 flex-1 justify-end min-w-0">
+            {/* Enlaces de navegación principal */}
+            <nav 
+              className="hidden lg:flex items-center gap-8"
+              role="navigation"
+              aria-label="Navegación principal"
+            >
+              {navigationLinks.map((link) => {
+                const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+                
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`transition-colors font-medium ${
+                      isActive
+                        ? 'text-airbnb-primary-100'
+                        : 'text-airbnb-text-200 hover:text-airbnb-primary-100'
+                    }`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
 
-          {/* Botón de autenticación */}
-          {/* Muestra diferentes opciones según si el usuario está logueado o no */}
-          <AuthButton />
+            {/* Barra de búsqueda para visitar viviendas */}
+            <div className="min-w-0">
+              <SearchInput />
+            </div>
+
+            {/* Botón de autenticación */}
+            <AuthButton />
+          </div>
         </div>
       </div>
     </header>

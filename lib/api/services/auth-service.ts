@@ -7,8 +7,61 @@
  */
 
 import { apiClient } from '../client';
+import { ApiClientError } from '../client';
 import type { IAuthService } from '../interfaces';
 import type { AuthResponse, ResetPasswordResponse, User, ValidateResetTokenResponse } from '../../auth/types';
+import { authResponseSchema, userSchema } from '../../auth/schemas';
+
+function coerceString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return undefined;
+}
+
+/**
+ * Normaliza la forma del usuario que venga del backend a la forma esperada por la UI.
+ * Por qué: algunos backends devuelven `_id`, `name`, `created_at`, etc.
+ */
+function normalizeUser(raw: any): User | undefined {
+  if (!raw) return undefined;
+
+  const id =
+    coerceString(raw.id) ??
+    coerceString(raw._id) ??
+    coerceString(raw.userId) ??
+    coerceString(raw.uid);
+
+  const email = coerceString(raw.email) ?? coerceString(raw.mail);
+
+  const fullName =
+    coerceString(raw.fullName) ??
+    coerceString(raw.name) ??
+    coerceString(raw.username) ??
+    (email ? email.split('@')[0] : undefined) ??
+    'Usuario';
+
+  const createdAt =
+    coerceString(raw.createdAt) ??
+    coerceString(raw.created_at) ??
+    coerceString(raw.created) ??
+    new Date().toISOString();
+
+  const avatar =
+    coerceString(raw.avatar) ??
+    coerceString(raw.photoUrl) ??
+    coerceString(raw.photoURL) ??
+    coerceString(raw.picture);
+
+  if (!id || !email) return undefined;
+
+  return {
+    id,
+    email,
+    fullName,
+    avatar,
+    createdAt,
+  };
+}
 
 function normalizeAuthResponse(raw: any): AuthResponse {
   const token =
@@ -34,12 +87,20 @@ function normalizeAuthResponse(raw: any): AuthResponse {
     raw?.error?.message ??
     raw?.data?.error?.message;
 
-  return {
+  const normalizedUser = normalizeUser(user);
+  const parsedUser = normalizedUser ? userSchema.safeParse(normalizedUser) : null;
+  const normalized: AuthResponse = {
     success,
-    user,
+    user: parsedUser && parsedUser.success ? (parsedUser.data as User) : undefined,
     token,
-    error,
+    error:
+      error ||
+      (parsedUser && !parsedUser.success ? 'Contrato de usuario inválido en respuesta de auth' : undefined),
   };
+
+  // Validación suave del wrapper. Si falla, devolvemos el normalized igualmente.
+  const parsedWrapper = authResponseSchema.safeParse(normalized);
+  return parsedWrapper.success ? (parsedWrapper.data as AuthResponse) : normalized;
 }
 
 /**
@@ -75,12 +136,52 @@ export const authService: IAuthService = {
   },
 
   async getCurrentUser() {
-    // TODO: Implementar obtención de usuario desde API
-    // Por ahora retornar null, se debe obtener desde el token o endpoint /auth/me
     try {
-      return await apiClient.get<User | null>('/auth/me');
-    } catch {
+      const raw = await apiClient.get<any>('/auth/me');
+      if (raw == null) return null;
+
+      // Soportar respuestas tipo { user: {...} } o directamente el objeto usuario
+      const candidate =
+        raw?.user ??
+        raw?.data?.user ??
+        raw?.profile ??
+        raw?.data?.profile ??
+        raw;
+
+      const normalizedUser = normalizeUser(candidate);
+      if (!normalizedUser) return null;
+
+      const parsed = userSchema.safeParse(normalizedUser);
+      return parsed.success ? (parsed.data as User) : null;
+    } catch (error) {
+      // Si el backend responde 401, limpiamos el token para evitar estados "atascados".
+      if (error instanceof ApiClientError && error.status === 401) {
+        apiClient.setToken(null);
+      }
       return null;
+    }
+  },
+
+  async updateProfile(data) {
+    /**
+     * Nota: en este proyecto el perfil actual está acoplado al módulo Auth (`/auth/me`).
+     * Algunos backends separan esto como `/users/me`. Probamos primero `/users/me`
+     * y si no existe (404) usamos `/auth/me`.
+     */
+    try {
+      try {
+        await apiClient.patch('/users/me', data);
+      } catch (error) {
+        if (error instanceof ApiClientError && error.status === 404) {
+          await apiClient.patch('/auth/me', data);
+        } else {
+          throw error;
+        }
+      }
+
+      return await authService.getCurrentUser();
+    } catch (error) {
+      throw error;
     }
   },
 

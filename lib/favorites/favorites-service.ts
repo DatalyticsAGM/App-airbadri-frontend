@@ -1,80 +1,67 @@
 /**
- * Favorites Service (Client Storage)
+ * Favorites Service (API Real)
  *
- * Por qué existe: la app necesita una forma simple de guardar favoritos.
- * Hoy se guarda en localStorage; si el backend expone un REST (ej: /favorites),
- * este archivo es el único lugar a reemplazar.
+ * Por qué existe: la UI (botón de favoritos / página de favoritos) necesita
+ * persistencia real en backend (no localStorage) para que sea consistente
+ * entre dispositivos y sesiones.
  */
 
 import type { Favorite, CreateFavoriteData } from './types';
+import { apiClient, ApiClientError } from '@/lib/api/client';
 
-const STORAGE_KEY = 'airbnb_favorites';
-
-function getStoredFavorites(): Favorite[] {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Error reading favorites from localStorage:', error);
-    return [];
-  }
+function unwrapList(raw: any): any[] {
+  const list = Array.isArray(raw) ? raw : raw?.data ?? raw?.favorites ?? raw?.items ?? raw?.results ?? [];
+  return Array.isArray(list) ? list : [];
 }
 
-function saveFavorites(favorites: Favorite[]): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-  } catch (error) {
-    console.error('Error saving favorites to localStorage:', error);
-  }
+function coerceString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return '';
 }
 
-function generateFavoriteId(): string {
-  return `fav_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+function normalizeFavorite(raw: any): Favorite {
+  return {
+    id: coerceString(raw?.id || raw?._id),
+    userId: coerceString(raw?.userId),
+    propertyId: coerceString(raw?.propertyId),
+    date: coerceString(raw?.date || raw?.createdAt) || new Date().toISOString(),
+  };
 }
 
 export const favoritesService = {
   async getFavoritesByUser(userId: string): Promise<Favorite[]> {
-    const favorites = getStoredFavorites();
-    return favorites.filter((fav) => fav.userId === userId);
+    // La mayoría de APIs devuelven favoritos del usuario actual en `GET /favorites`.
+    // Dejamos `userId` como query opcional por compatibilidad.
+    const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    const raw = await apiClient.get<any>(`/favorites${query}`);
+    return unwrapList(raw).map(normalizeFavorite);
   },
 
   async addFavorite(data: CreateFavoriteData): Promise<Favorite> {
-    const favorites = getStoredFavorites();
-
-    const existing = favorites.find(
-      (fav) => fav.userId === data.userId && fav.propertyId === data.propertyId
-    );
-
-    if (existing) return existing;
-
-    const newFavorite: Favorite = {
-      id: generateFavoriteId(),
-      userId: data.userId,
-      propertyId: data.propertyId,
-      date: new Date().toISOString(),
-    };
-
-    favorites.push(newFavorite);
-    saveFavorites(favorites);
-
-    return newFavorite;
+    const raw = await apiClient.post<any>('/favorites', data);
+    const item = raw?.data ?? raw?.favorite ?? raw;
+    return normalizeFavorite(item);
   },
 
   async removeFavorite(userId: string, propertyId: string): Promise<void> {
-    const favorites = getStoredFavorites();
-    const filtered = favorites.filter(
-      (fav) => !(fav.userId === userId && fav.propertyId === propertyId)
-    );
-    saveFavorites(filtered);
+    // Intento 1: DELETE por query (simple)
+    try {
+      await apiClient.delete(`/favorites?userId=${encodeURIComponent(userId)}&propertyId=${encodeURIComponent(propertyId)}`);
+      return;
+    } catch (error) {
+      // Intento 2: DELETE por recurso /favorites/:propertyId
+      if (error instanceof ApiClientError && (error.status === 404 || error.status === 405)) {
+        await apiClient.delete(`/favorites/${encodeURIComponent(propertyId)}`);
+        return;
+      }
+      throw error;
+    }
   },
 
   async isFavorite(userId: string, propertyId: string): Promise<boolean> {
-    const favorites = getStoredFavorites();
-    return favorites.some((fav) => fav.userId === userId && fav.propertyId === propertyId);
+    const favorites = await this.getFavoritesByUser(userId);
+    return favorites.some((fav) => fav.propertyId === propertyId);
   },
 
   async getFavoritePropertyIds(userId: string): Promise<string[]> {

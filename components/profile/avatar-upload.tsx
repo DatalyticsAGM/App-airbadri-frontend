@@ -26,13 +26,12 @@ import {
 } from '@/components/ui/dialog';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
-import { apiClient } from '@/lib/api/client';
 import { toast } from 'sonner';
 
 type AvatarUploadProps = Record<string, never>;
 
 export const AvatarUpload = (): JSX.Element | null => {
-  const { user, refreshUser } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar || '');
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -111,13 +110,9 @@ export const AvatarUpload = (): JSX.Element | null => {
 
     setIsUploading(true);
     try {
-      // Implementación mínima (API real):
-      // asumimos un endpoint de perfil. Si tu backend usa otro, cambia este endpoint aquí.
-      await apiClient.patch('/auth/me', { avatar: avatarUrl });
-      
-      // Refrescar el usuario en el contexto
-      if (refreshUser) {
-        await refreshUser();
+      const result = await updateProfile({ avatar: avatarUrl });
+      if (!result.success) {
+        throw new Error(result.error || 'Error al actualizar la foto de perfil');
       }
 
       toast.success('Foto de perfil actualizada correctamente');
@@ -139,10 +134,9 @@ export const AvatarUpload = (): JSX.Element | null => {
   const handleRemove = async (): Promise<void> => {
     setIsUploading(true);
     try {
-      await apiClient.patch('/auth/me', { avatar: '' });
-      
-      if (refreshUser) {
-        await refreshUser();
+      const result = await updateProfile({ avatar: '' });
+      if (!result.success) {
+        throw new Error(result.error || 'Error al eliminar la foto de perfil');
       }
 
       setAvatarUrl('');

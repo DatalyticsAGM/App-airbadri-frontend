@@ -50,7 +50,8 @@ export default function HostDashboardPage() {
     setLoading(true);
     try {
       // Cargar propiedades del host
-      const hostProperties = await propertyService.getPropertiesByHost(user.id);
+      const hostPropertiesRaw = await propertyService.getPropertiesByHost(user.id);
+      const hostProperties = Array.isArray(hostPropertiesRaw) ? hostPropertiesRaw : [];
       setProperties(hostProperties);
 
       // Calcular estadísticas
@@ -259,7 +260,7 @@ export default function HostDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {properties.slice(0, 5).map((property) => (
+                {(properties || []).slice(0, 5).map((property) => (
                   <Link
                     key={property.id}
                     href={`/properties/${property.id}`}

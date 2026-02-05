@@ -34,6 +34,7 @@ interface AuthContextType {
   resetPassword: (token: string, newPassword: string) => Promise<ResetPasswordResponse>;
   validateResetToken: (token: string) => Promise<ValidateResetTokenResponse>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (data: Partial<Pick<User, 'avatar' | 'fullName'>>) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
 }
 
@@ -178,6 +179,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
+   * Actualiza datos de perfil del usuario actual (ej: avatar)
+   */
+  const updateProfile = async (data: Partial<Pick<User, 'avatar' | 'fullName'>>) => {
+    try {
+      const updatedUser = await authService.updateProfile(data);
+      if (updatedUser) {
+        setUser(updatedUser);
+      } else {
+        await refreshUser();
+      }
+      return { success: true as const };
+    } catch (error) {
+      console.error('Error en updateProfile:', error);
+      return {
+        success: false as const,
+        error: error instanceof Error ? error.message : 'Error al actualizar el perfil',
+      };
+    }
+  };
+
+  /**
    * Refresca los datos del usuario actual
    */
   const refreshUser = async () => {
@@ -201,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     validateResetToken,
     changePassword,
+    updateProfile,
     refreshUser,
   };
 
