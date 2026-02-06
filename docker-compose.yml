@@ -1,0 +1,87 @@
+# Docker Compose para desarrollo y producción
+# Orquesta Frontend Next.js + Backend (cuando esté disponible)
+
+version: '3.8'
+
+services:
+  # Frontend Next.js
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Variables de build-time
+        NEXT_PUBLIC_API_URL: http://localhost:3333/api
+        NEXT_PUBLIC_APP_NAME: Adribnb
+    
+    container_name: airbnb-frontend
+    
+    ports:
+      - "3000:3000"
+    
+    environment:
+      # Variables de runtime
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:3333/api
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    
+    # Reiniciar automáticamente si falla
+    restart: unless-stopped
+    
+    # Dependencias (descomentar cuando tengas backend)
+    # depends_on:
+    #   - backend
+    
+    networks:
+      - airbnb-network
+
+  # Backend (descomentar cuando esté listo)
+  # backend:
+  #   build:
+  #     context: ../Backend_airbnb  # Ajustar ruta según tu estructura
+  #     dockerfile: Dockerfile
+  #   
+  #   container_name: airbnb-backend
+  #   
+  #   ports:
+  #     - "3333:3333"
+  #   
+  #   environment:
+  #     - NODE_ENV=production
+  #     - MONGODB_URI=mongodb://mongo:27017/airbnb
+  #     - JWT_SECRET=tu-secret-aqui-cambiar-en-produccion
+  #   
+  #   depends_on:
+  #     - mongo
+  #   
+  #   restart: unless-stopped
+  #   
+  #   networks:
+  #     - airbnb-network
+
+  # MongoDB (descomentar cuando necesites BD)
+  # mongo:
+  #   image: mongo:7
+  #   container_name: airbnb-mongo
+  #   
+  #   ports:
+  #     - "27017:27017"
+  #   
+  #   environment:
+  #     - MONGO_INITDB_DATABASE=airbnb
+  #   
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   
+  #   restart: unless-stopped
+  #   
+  #   networks:
+  #     - airbnb-network
+
+networks:
+  airbnb-network:
+    driver: bridge
+
+# Volúmenes persistentes (descomentar cuando uses MongoDB)
+# volumes:
+#   mongo-data:
